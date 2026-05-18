@@ -65,6 +65,7 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
     ref.invalidate(todayExpensesProvider);
     ref.invalidate(allExpensesProvider);
     ref.invalidate(dateExpensesProvider);
+    ref.invalidate(cumulativeBalanceProvider);
 
     if (mounted) {
       context.pop();

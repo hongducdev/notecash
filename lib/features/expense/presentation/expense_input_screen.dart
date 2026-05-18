@@ -7,7 +7,8 @@ import 'package:notecash/features/expense/domain/expense.dart';
 import 'package:notecash/services/expense_parser_service.dart';
 
 class ExpenseInputScreen extends ConsumerStatefulWidget {
-  const ExpenseInputScreen({super.key});
+  final Expense? expenseToEdit;
+  const ExpenseInputScreen({super.key, this.expenseToEdit});
 
   @override
   ConsumerState<ExpenseInputScreen> createState() => _ExpenseInputScreenState();
@@ -21,6 +22,12 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.expenseToEdit != null) {
+      _previewExpense = widget.expenseToEdit;
+      // Pre-fill controller with a string that would parse to this expense
+      final amountStr = widget.expenseToEdit!.amount.toInt().toString();
+      _controller.text = "${widget.expenseToEdit!.note} $amountStr";
+    }
     _controller.addListener(_updatePreview);
   }
 
@@ -38,6 +45,12 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
     if (_previewExpense == null || _previewExpense!.amount == 0) return;
 
     final service = ref.read(isarServiceProvider);
+
+    if (widget.expenseToEdit != null) {
+      _previewExpense!.id = widget.expenseToEdit!.id;
+      _previewExpense!.createdAt = widget.expenseToEdit!.createdAt;
+    }
+
     await service.saveExpense(_previewExpense!);
 
     // Refresh providers
@@ -45,6 +58,7 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
     ref.invalidate(todayExpensesProvider);
     ref.invalidate(allExpensesProvider);
     ref.invalidate(dateExpensesProvider);
+    ref.invalidate(cumulativeBalanceProvider);
 
     if (mounted) {
       context.pop();
@@ -83,42 +97,69 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
           const SizedBox(width: 16),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Nhập chi tiêu',
-              style: Theme.of(context).textTheme.displayLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Ví dụ: "cf 35k" hoặc "grab 120k"',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Nhập chi tiêu',
+                style: Theme.of(context).textTheme.displayLarge,
               ),
-            ),
-            const SizedBox(height: 32),
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              style: const TextStyle(fontSize: 24),
-              decoration: InputDecoration(
-                hintText: 'Bạn đã chi gì?',
-                hintStyle: TextStyle(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.2),
+              const SizedBox(height: 8),
+              Text(
+                'Ví dụ: "cf 35k" hoặc "grab 120k"',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                 ),
-                border: InputBorder.none,
               ),
-              onSubmitted: (_) => _save(),
-            ),
-            const Spacer(),
-            if (_previewExpense != null) _buildPreviewCard(),
-            const SizedBox(height: 32),
-          ],
+              const SizedBox(height: 32),
+              TextField(
+                controller: _controller,
+                autofocus: true,
+                style: const TextStyle(fontSize: 24),
+                decoration: InputDecoration(
+                  hintText: 'Bạn đã chi gì?',
+                  hintStyle: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.2),
+                  ),
+                  border: InputBorder.none,
+                ),
+                onSubmitted: (_) => _save(),
+              ),
+              const SizedBox(height: 16),
+              if (_previewExpense != null)
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(
+                      value: false,
+                      label: Text('Chi tiêu'),
+                      icon: Icon(Icons.remove_circle_outline),
+                    ),
+                    ButtonSegment(
+                      value: true,
+                      label: Text('Thu nhập'),
+                      icon: Icon(Icons.add_circle_outline),
+                    ),
+                  ],
+                  selected: {_previewExpense!.isIncome},
+                  onSelectionChanged: (Set<bool> newSelection) {
+                    setState(() {
+                      _previewExpense!.isIncome = newSelection.first;
+                      if (_previewExpense!.isIncome) {
+                        _previewExpense!.category = ExpenseCategory.income;
+                      }
+                    });
+                  },
+                ),
+              const SizedBox(height: 100), // Khoảng trống để không bị Preview Card đè
+              if (_previewExpense != null) _buildPreviewCard(),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
@@ -177,8 +218,12 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
             ),
           ),
           Text(
-            currencyFormat.format(_previewExpense!.amount),
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            '${_previewExpense!.isIncome ? "+" : "-"}${currencyFormat.format(_previewExpense!.amount)}',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: _previewExpense!.isIncome ? Colors.green : null,
+            ),
           ),
         ],
       ),

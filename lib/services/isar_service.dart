@@ -1,6 +1,6 @@
 import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
+import 'package:path_provider/path_provider.dart';
 
 class IsarService {
   late Isar isar;
@@ -13,6 +13,12 @@ class IsarService {
   Future<void> saveExpense(Expense expense) async {
     await isar.writeTxn(() async {
       await isar.expenses.put(expense);
+    });
+  }
+
+  Future<void> deleteExpense(Id id) async {
+    await isar.writeTxn(() async {
+      await isar.expenses.delete(id);
     });
   }
 
@@ -33,5 +39,23 @@ class IsarService {
         .createdAtBetween(startOfDay, endOfDay)
         .sortByCreatedAtDesc()
         .findAll();
+  }
+
+  Future<double> getBalanceUntil(DateTime date) async {
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    final expenses = await isar.expenses
+        .filter()
+        .createdAtLessThan(endOfDay)
+        .findAll();
+    
+    double balance = 0;
+    for (var e in expenses) {
+      if (e.isIncome) {
+        balance += e.amount;
+      } else {
+        balance -= e.amount;
+      }
+    }
+    return balance;
   }
 }

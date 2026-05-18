@@ -20,12 +20,14 @@ final selectedDateProvider = StateProvider<DateTime>((ref) {
   return DateTime.now();
 });
 
-final dateExpensesProvider = FutureProvider.family<List<Expense>, DateTime>((
-  ref,
-  date,
-) async {
+final dateExpensesProvider = FutureProvider.family<List<Expense>, DateTime>((ref, date) async {
   final service = ref.watch(isarServiceProvider);
   return service.getExpensesByDate(date);
+});
+
+final cumulativeBalanceProvider = FutureProvider.family<double, DateTime>((ref, date) async {
+  final service = ref.watch(isarServiceProvider);
+  return service.getBalanceUntil(date);
 });
 
 final allExpensesProvider = FutureProvider((ref) async {

@@ -55,7 +55,11 @@ class ExpenseParserService {
         lowerNote.contains('nước') ||
         lowerNote.contains('bill')) {
       category = ExpenseCategory.bills;
-    } else if (lowerNote.contains('lương') || lowerNote.contains('thưởng')) {
+    } else if (lowerNote.contains('lương') ||
+        lowerNote.contains('thưởng') ||
+        lowerNote.contains('tặng') ||
+        lowerNote.contains('cho') ||
+        lowerNote.contains('quà')) {
       category = ExpenseCategory.income;
       isIncome = true;
     }
