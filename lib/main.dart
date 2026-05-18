@@ -1,12 +1,16 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:notecash/core/providers.dart';
 import 'package:notecash/core/router.dart';
 import 'package:notecash/core/theme.dart';
+import 'package:notecash/services/home_widget_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await HomeWidgetService.init();
 
   final container = ProviderContainer();
   final isarService = container.read(isarServiceProvider);
@@ -17,8 +21,33 @@ void main() async {
   );
 }
 
-class NoteCashApp extends StatelessWidget {
+class NoteCashApp extends ConsumerStatefulWidget {
   const NoteCashApp({super.key});
+
+  @override
+  ConsumerState<NoteCashApp> createState() => _NoteCashAppState();
+}
+
+class _NoteCashAppState extends ConsumerState<NoteCashApp> {
+  @override
+  void initState() {
+    super.initState();
+    _setupHomeWidget();
+  }
+
+  void _setupHomeWidget() {
+    HomeWidget.setAppGroupId('group.notecash');
+    HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetLaunch);
+    HomeWidget.widgetClicked.listen(_handleWidgetLaunch);
+  }
+
+  void _handleWidgetLaunch(Uri? uri) {
+    if (uri?.host == 'add-expense') {
+      router.push('/add-expense');
+    } else if (uri?.host == 'dashboard') {
+      router.go('/'); // Quay về trang chủ
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

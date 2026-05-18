@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
+import 'package:notecash/services/home_widget_service.dart';
 import 'package:path_provider/path_provider.dart';
 
 class IsarService {
@@ -8,18 +9,27 @@ class IsarService {
   Future<void> init() async {
     final dir = await getApplicationDocumentsDirectory();
     isar = await Isar.open([ExpenseSchema], directory: dir.path);
+    // Update widget on init
+    await updateHomeWidget();
   }
 
   Future<void> saveExpense(Expense expense) async {
     await isar.writeTxn(() async {
       await isar.expenses.put(expense);
     });
+    await updateHomeWidget();
   }
 
   Future<void> deleteExpense(Id id) async {
     await isar.writeTxn(() async {
       await isar.expenses.delete(id);
     });
+    await updateHomeWidget();
+  }
+
+  Future<void> updateHomeWidget() async {
+    final balance = await getBalanceUntil(DateTime.now());
+    await HomeWidgetService.updateBalance(balance);
   }
 
   Future<List<Expense>> getAllExpenses() async {

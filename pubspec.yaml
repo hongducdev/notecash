@@ -38,6 +38,9 @@ dependencies:
     # Navigation
     go_router: ^14.2.1
 
+    # Home Widget
+    home_widget: ^0.9.1
+
     # Local Database
     isar: ^3.1.0+1
     isar_flutter_libs: ^3.1.0+1
