@@ -46,6 +46,8 @@ dependencies:
     # UI & Utilities
     dynamic_color: ^1.7.0
     table_calendar: ^3.1.2
+    image_picker: ^1.1.2
+    google_mlkit_text_recognition: ^0.13.0
     fl_chart: ^0.68.0
     intl: ^0.19.0
     google_fonts: ^8.1.0

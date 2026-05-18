@@ -60,6 +60,11 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
+          IconButton(
+            onPressed: () => context.push('/scan-receipt'),
+            icon: const Icon(Icons.document_scanner_outlined),
+            tooltip: 'Quét hóa đơn',
+          ),
           TextButton(
             onPressed: _previewExpense != null && _previewExpense!.amount > 0
                 ? _save
