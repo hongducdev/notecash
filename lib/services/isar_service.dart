@@ -127,10 +127,46 @@ class IsarService {
         .findAll();
 
     final settings = await getUserSettings();
-    double balance =
-        (settings?.initialCashBalance ?? 0) +
-        (settings?.initialBankBalance ?? 0);
+    double balance = (settings?.initialCashBalance ?? 0) + (settings?.initialBankBalance ?? 0);
+    
+    for (var e in expenses) {
+      if (e.isIncome) {
+        balance += e.amount;
+      } else {
+        balance -= e.amount;
+      }
+    }
+    return balance;
+  }
 
+  Future<double> getCashBalance() async {
+    final settings = await getUserSettings();
+    double balance = settings?.initialCashBalance ?? 0;
+    
+    final expenses = await isar.expenses
+        .filter()
+        .paymentMethodEqualTo(PaymentMethod.cash)
+        .findAll();
+        
+    for (var e in expenses) {
+      if (e.isIncome) {
+        balance += e.amount;
+      } else {
+        balance -= e.amount;
+      }
+    }
+    return balance;
+  }
+
+  Future<double> getBankBalance() async {
+    final settings = await getUserSettings();
+    double balance = settings?.initialBankBalance ?? 0;
+    
+    final expenses = await isar.expenses
+        .filter()
+        .paymentMethodEqualTo(PaymentMethod.bank)
+        .findAll();
+        
     for (var e in expenses) {
       if (e.isIncome) {
         balance += e.amount;

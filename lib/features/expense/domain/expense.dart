@@ -16,7 +16,12 @@ class Expense {
   late ExpenseCategory category;
 
   late bool isIncome;
+
+  @enumerated
+  late PaymentMethod paymentMethod;
 }
+
+enum PaymentMethod { cash, bank }
 
 enum ExpenseCategory {
   foodAndDrink,

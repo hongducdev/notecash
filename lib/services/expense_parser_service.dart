@@ -69,6 +69,7 @@ class ExpenseParserService {
       ..amount = amount
       ..category = category
       ..isIncome = isIncome
+      ..paymentMethod = PaymentMethod.cash // Default to cash
       ..createdAt = DateTime.now();
   }
 }

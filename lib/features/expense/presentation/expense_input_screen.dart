@@ -59,6 +59,8 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
     ref.invalidate(allExpensesProvider);
     ref.invalidate(dateExpensesProvider);
     ref.invalidate(cumulativeBalanceProvider);
+    ref.invalidate(cashBalanceProvider);
+    ref.invalidate(bankBalanceProvider);
 
     if (mounted) {
       context.pop();
@@ -111,7 +113,9 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
               Text(
                 'Ví dụ: "cf 35k" hoặc "grab 120k"',
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.5),
                 ),
               ),
               const SizedBox(height: 32),
@@ -155,7 +159,31 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
                     });
                   },
                 ),
-              const SizedBox(height: 100), // Khoảng trống để không bị Preview Card đè
+              const SizedBox(height: 16),
+              if (_previewExpense != null)
+                SegmentedButton<PaymentMethod>(
+                  segments: const [
+                    ButtonSegment(
+                      value: PaymentMethod.cash,
+                      label: Text('Tiền mặt'),
+                      icon: Icon(Icons.payments_outlined),
+                    ),
+                    ButtonSegment(
+                      value: PaymentMethod.bank,
+                      label: Text('Ngân hàng'),
+                      icon: Icon(Icons.account_balance_outlined),
+                    ),
+                  ],
+                  selected: {_previewExpense!.paymentMethod},
+                  onSelectionChanged: (Set<PaymentMethod> newSelection) {
+                    setState(() {
+                      _previewExpense!.paymentMethod = newSelection.first;
+                    });
+                  },
+                ),
+              const SizedBox(
+                height: 100,
+              ), // Khoảng trống để không bị Preview Card đè
               if (_previewExpense != null) _buildPreviewCard(),
               const SizedBox(height: 32),
             ],

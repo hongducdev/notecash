@@ -13,6 +13,16 @@ final userSettingsProvider = FutureProvider<UserSettings?>((ref) async {
   return service.getUserSettings();
 });
 
+final cashBalanceProvider = FutureProvider<double>((ref) async {
+  final service = ref.watch(isarServiceProvider);
+  return service.getCashBalance();
+});
+
+final bankBalanceProvider = FutureProvider<double>((ref) async {
+  final service = ref.watch(isarServiceProvider);
+  return service.getBankBalance();
+});
+
 final expensesProvider = FutureProvider((ref) async {
   final service = ref.watch(isarServiceProvider);
   return service.getAllExpenses();
@@ -27,12 +37,18 @@ final selectedDateProvider = StateProvider<DateTime>((ref) {
   return DateTime.now();
 });
 
-final dateExpensesProvider = FutureProvider.family<List<Expense>, DateTime>((ref, date) async {
+final dateExpensesProvider = FutureProvider.family<List<Expense>, DateTime>((
+  ref,
+  date,
+) async {
   final service = ref.watch(isarServiceProvider);
   return service.getExpensesByDate(date);
 });
 
-final cumulativeBalanceProvider = FutureProvider.family<double, DateTime>((ref, date) async {
+final cumulativeBalanceProvider = FutureProvider.family<double, DateTime>((
+  ref,
+  date,
+) async {
   final service = ref.watch(isarServiceProvider);
   return service.getBalanceUntil(date);
 });
@@ -42,12 +58,16 @@ final allExpensesProvider = FutureProvider((ref) async {
   return service.getAllExpenses();
 });
 
-final notificationLogsProvider = FutureProvider<List<NotificationLog>>((ref) async {
+final notificationLogsProvider = FutureProvider<List<NotificationLog>>((
+  ref,
+) async {
   final service = ref.watch(isarServiceProvider);
   return service.getAllNotificationLogs();
 });
 
-final unreadNotificationLogsProvider = FutureProvider<List<NotificationLog>>((ref) async {
+final unreadNotificationLogsProvider = FutureProvider<List<NotificationLog>>((
+  ref,
+) async {
   final service = ref.watch(isarServiceProvider);
   return service.getUnreadNotificationLogs();
 });

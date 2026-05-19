@@ -27,7 +27,9 @@ class DashboardScreen extends ConsumerWidget {
               actions: [
                 Consumer(
                   builder: (context, ref, _) {
-                    final unreadAsync = ref.watch(unreadNotificationLogsProvider);
+                    final unreadAsync = ref.watch(
+                      unreadNotificationLogsProvider,
+                    );
                     final unreadCount = unreadAsync.asData?.value.length ?? 0;
                     return Badge(
                       isLabelVisible: unreadCount > 0,
@@ -122,7 +124,8 @@ class DashboardScreen extends ConsumerWidget {
     final cumulativeBalanceAsync = ref.watch(
       cumulativeBalanceProvider(selectedDate),
     );
-    final userSettingsAsync = ref.watch(userSettingsProvider);
+    final cashBalanceAsync = ref.watch(cashBalanceProvider);
+    final bankBalanceAsync = ref.watch(bankBalanceProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
     return dateExpensesAsync.when(
@@ -178,33 +181,22 @@ class DashboardScreen extends ConsumerWidget {
                   ],
                 ),
                 const Divider(height: 32),
-                userSettingsAsync.when(
-                  data: (settings) {
-                    if (settings == null) return const SizedBox.shrink();
-                    return Column(
-                      children: [
-                        _buildBalanceRow(
-                          context,
-                          'Tiền mặt',
-                          settings.initialCashBalance,
-                          colorScheme.onSurfaceVariant,
-                          currencyFormat,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildBalanceRow(
-                          context,
-                          'Ngân hàng',
-                          settings.initialBankBalance,
-                          colorScheme.onSurfaceVariant,
-                          currencyFormat,
-                        ),
-                        const Divider(height: 24),
-                      ],
-                    );
-                  },
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
+                _buildBalanceRow(
+                  context,
+                  'Tiền mặt',
+                  cashBalanceAsync,
+                  colorScheme.onSurfaceVariant,
+                  currencyFormat,
                 ),
+                const SizedBox(height: 8),
+                _buildBalanceRow(
+                  context,
+                  'Ngân hàng',
+                  bankBalanceAsync,
+                  colorScheme.onSurfaceVariant,
+                  currencyFormat,
+                ),
+                const Divider(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -246,20 +238,25 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildBalanceRow(
     BuildContext context,
     String label,
-    double amount,
+    AsyncValue<double> balanceAsync,
     Color color,
     NumberFormat format,
   ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 14, color: color),
-        ),
-        Text(
-          format.format(amount),
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        Text(label, style: TextStyle(fontSize: 14, color: color)),
+        balanceAsync.when(
+          data: (balance) => Text(
+            format.format(balance),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          loading: () => const SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(strokeWidth: 1.5),
+          ),
+          error: (_, __) => const Icon(Icons.error, size: 14),
         ),
       ],
     );
