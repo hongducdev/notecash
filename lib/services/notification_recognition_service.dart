@@ -37,7 +37,17 @@ class NotificationRecognitionService {
     'zalopay': ['com.zing.zalopay'],
   };
 
-  static Set<String> _trackedAppKeys = _trackedAppPackages.keys.toSet();
+  static const List<String> _legacyDefaultTrackedAppKeys = [
+    'techcombank',
+    'vietinbank',
+    'timo',
+    'cake',
+    'momo',
+    'zalopay',
+  ];
+
+  static Set<String> _trackedAppKeys = {};
+  static Set<String> _trackedPackageNames = {};
 
   static void setDatabaseService(IsarService service) {
     _isarService = service;
@@ -66,6 +76,7 @@ class NotificationRecognitionService {
               ..category = isIncome
                   ? ExpenseCategory.income
                   : ExpenseCategory.other
+              ..paymentMethod = PaymentMethod.bank
               ..createdAt = DateTime.now();
 
             router.push('/add-expense', extra: expense);
@@ -105,12 +116,30 @@ class NotificationRecognitionService {
 
   static Future<void> updateTrackedApps(Set<String> trackedAppKeys) async {
     _trackedAppKeys = trackedAppKeys;
+    _trackedPackageNames = {};
 
     final service = _isarService;
     if (service == null) return;
 
     final settings = await service.getUserSettings() ?? UserSettings();
     settings.trackedNotificationApps = trackedAppKeys.toList();
+    settings.trackedNotificationPackages = [];
+    settings.updatedAt = DateTime.now();
+    await service.saveUserSettings(settings);
+  }
+
+  static Future<void> updateTrackedPackages(
+    Set<String> trackedPackageNames,
+  ) async {
+    _trackedPackageNames = trackedPackageNames;
+    _trackedAppKeys = {};
+
+    final service = _isarService;
+    if (service == null) return;
+
+    final settings = await service.getUserSettings() ?? UserSettings();
+    settings.trackedNotificationPackages = trackedPackageNames.toList();
+    settings.trackedNotificationApps = [];
     settings.updatedAt = DateTime.now();
     await service.saveUserSettings(settings);
   }
@@ -121,9 +150,45 @@ class NotificationRecognitionService {
     final settings = await service.getUserSettings();
     if (settings == null) return;
 
-    final saved = settings.trackedNotificationApps;
-    if (saved.isEmpty) return;
-    _trackedAppKeys = saved.toSet();
+    final savedPackages = settings.trackedNotificationPackages;
+    if (savedPackages.isNotEmpty) {
+      final legacyDefaultPackages = packagesForAppKeys(
+        _legacyDefaultTrackedAppKeys.toSet(),
+      ).toSet();
+      final savedSet = savedPackages.toSet();
+      final isLegacyDefaultSelection =
+          savedSet.length == legacyDefaultPackages.length &&
+          savedSet.containsAll(legacyDefaultPackages);
+
+      if (isLegacyDefaultSelection) {
+        settings.trackedNotificationApps = [];
+        settings.trackedNotificationPackages = [];
+        settings.updatedAt = DateTime.now();
+        await service.saveUserSettings(settings);
+        _trackedPackageNames = {};
+        _trackedAppKeys = {};
+        return;
+      }
+
+      _trackedPackageNames = savedPackages.toSet();
+      _trackedAppKeys = {};
+      return;
+    }
+
+    if (settings.trackedNotificationApps.isNotEmpty) {
+      settings.trackedNotificationApps = [];
+      settings.trackedNotificationPackages = [];
+      settings.updatedAt = DateTime.now();
+      await service.saveUserSettings(settings);
+    }
+    _trackedPackageNames = {};
+    _trackedAppKeys = {};
+  }
+
+  static List<String> packagesForAppKeys(Set<String> trackedAppKeys) {
+    return trackedAppKeys
+        .expand((key) => _trackedAppPackages[key] ?? const <String>[])
+        .toList();
   }
 
   static void _handleNotification(ServiceNotificationEvent event) {
@@ -133,55 +198,111 @@ class NotificationRecognitionService {
     if (content == null) return;
     if (packageName == null) return;
 
-    final patterns = _trackedAppKeys
-        .expand((key) => _trackedAppPackages[key] ?? const <String>[])
-        .toList();
-
-    final isTrackedApp = patterns.any(packageName.contains);
-    if (!isTrackedApp) return;
+    if (_trackedPackageNames.isNotEmpty) {
+      if (!_trackedPackageNames.contains(packageName)) return;
+    } else {
+      if (_trackedAppKeys.isEmpty) return;
+      final patterns = packagesForAppKeys(_trackedAppKeys);
+      final isTrackedApp = patterns.any(packageName.contains);
+      if (!isTrackedApp) return;
+    }
 
     // Also check for keywords in title/content if package name is not specific
-    bool containsBankKeywords = content.contains(
-      RegExp(r'TK|số dư|biến động|GD|giao dịch', caseSensitive: false),
-    );
-
-    if (containsBankKeywords) {
-      _processBankNotification(content);
-    }
+    final parsed = _parseBankNotification(content);
+    if (parsed == null) return;
+    _showQuickAddNotification(parsed.amount, parsed.isIncome, content);
   }
 
-  static void _processBankNotification(String content) {
-    // Attempt to parse amount and type from bank notification
-    double amount = 0;
-    bool isIncome = false;
+  static _ParsedBankNotification? _parseBankNotification(String content) {
+    final lower = content.toLowerCase();
 
-    // Look for + or - followed by numbers
-    final incomeMatch = RegExp(r'\+\s*([0-9,.]+)').firstMatch(content);
-    final expenseMatch = RegExp(r'-\s*([0-9,.]+)').firstMatch(content);
+    final isDebit = RegExp(
+      r'ghi\s*n[ợo]|trừ|thanh\s*toán|chi\s*tiêu|mua\s*hàng|rút\s*tiền',
+      caseSensitive: false,
+    ).hasMatch(content);
 
-    if (incomeMatch != null) {
-      isIncome = true;
-      amount = _parseAmount(incomeMatch.group(1)!);
-    } else if (expenseMatch != null) {
-      isIncome = false;
-      amount = _parseAmount(expenseMatch.group(1)!);
-    } else {
-      // Fallback: search for any large number that could be an amount
-      final amountMatch = RegExp(
-        r'([0-9]{1,3}([,.][0-9]{3})+)',
-      ).firstMatch(content);
-      if (amountMatch != null) {
-        amount = _parseAmount(amountMatch.group(0)!);
+    final isCredit = RegExp(
+      r'ghi\s*c[oó]|cộng|nhận|hoàn\s*tiền|chuyển\s*đến|tiền\s*vào',
+      caseSensitive: false,
+    ).hasMatch(content);
+
+    bool? isIncome;
+    if (isCredit && !isDebit) isIncome = true;
+    if (isDebit && !isCredit) isIncome = false;
+
+    final signed = RegExp(
+      r'([+-])\s*([0-9][0-9., ]{0,20})',
+    ).allMatches(content);
+    for (final m in signed) {
+      final sign = m.group(1);
+      final raw = m.group(2);
+      if (raw == null) continue;
+      final amount = _parseAmount(raw);
+      if (amount <= 0) continue;
+
+      final idx = m.start;
+      final aroundStart = (idx - 16).clamp(0, content.length);
+      final aroundEnd = (idx + 32).clamp(0, content.length);
+      final around = content.substring(aroundStart, aroundEnd).toLowerCase();
+      if (RegExp(
+        r'số\s*dư|so\s*du|balance|sd\s*[:#]?',
+        caseSensitive: false,
+      ).hasMatch(around)) {
+        continue;
       }
+
+      return _ParsedBankNotification(amount: amount, isIncome: sign == '+');
     }
 
-    if (amount > 0) {
-      _showQuickAddNotification(amount, isIncome, content);
+    final withCurrency = RegExp(
+      r'([0-9][0-9., ]{0,20})\s*(vnd|vnđ|đ)\b',
+      caseSensitive: false,
+    ).allMatches(content);
+
+    for (final m in withCurrency) {
+      final raw = m.group(1);
+      if (raw == null) continue;
+      final amount = _parseAmount(raw);
+      if (amount <= 0) continue;
+
+      final idx = m.start;
+      final aroundStart = (idx - 24).clamp(0, content.length);
+      final aroundEnd = (idx + 40).clamp(0, content.length);
+      final around = content.substring(aroundStart, aroundEnd).toLowerCase();
+      if (RegExp(
+        r'số\s*dư|so\s*du|balance|sd\s*[:#]?',
+        caseSensitive: false,
+      ).hasMatch(around)) {
+        continue;
+      }
+      if (RegExp(
+        r'hạn\s*mức|han\s*muc|phí|fee',
+        caseSensitive: false,
+      ).hasMatch(around)) {
+        continue;
+      }
+
+      final decidedIsIncome =
+          isIncome ?? _inferIncomeFromContext(lower, around) ?? false;
+
+      return _ParsedBankNotification(amount: amount, isIncome: decidedIsIncome);
     }
+
+    return null;
+  }
+
+  static bool? _inferIncomeFromContext(String lower, String around) {
+    if (around.contains('ghi có') || around.contains('ghi co')) return true;
+    if (around.contains('ghi nợ') || around.contains('ghi no')) return false;
+    if (lower.contains('ghi có') || lower.contains('ghi co')) return true;
+    if (lower.contains('ghi nợ') || lower.contains('ghi no')) return false;
+    return null;
   }
 
   static double _parseAmount(String str) {
-    return double.tryParse(str.replaceAll(',', '').replaceAll('.', '')) ?? 0;
+    final normalized = str.replaceAll(RegExp(r'[^0-9]'), '');
+    if (normalized.isEmpty) return 0;
+    return double.tryParse(normalized) ?? 0;
   }
 
   static Future<void> _showQuickAddNotification(
@@ -213,4 +334,11 @@ class NotificationRecognitionService {
       payload: '$amount|$isIncome|$originalContent',
     );
   }
+}
+
+class _ParsedBankNotification {
+  final double amount;
+  final bool isIncome;
+
+  const _ParsedBankNotification({required this.amount, required this.isIncome});
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notecash/core/providers.dart';
 import 'package:notecash/services/notification_recognition_service.dart';
@@ -12,40 +13,16 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  static final List<_TrackedAppOption> _appOptions = [
-    _TrackedAppOption(
-      key: 'techcombank',
-      label: 'Techcombank',
-      icon: Icons.account_balance_outlined,
-    ),
-    _TrackedAppOption(
-      key: 'vietinbank',
-      label: 'VietinBank',
-      icon: Icons.account_balance_outlined,
-    ),
-    _TrackedAppOption(
-      key: 'timo',
-      label: 'Timo',
-      icon: Icons.account_balance_outlined,
-    ),
-    _TrackedAppOption(
-      key: 'cake',
-      label: 'Cake',
-      icon: Icons.account_balance_outlined,
-    ),
-    _TrackedAppOption(
-      key: 'momo',
-      label: 'MoMo',
-      icon: Icons.account_balance_wallet_outlined,
-    ),
-    _TrackedAppOption(
-      key: 'zalopay',
-      label: 'ZaloPay',
-      icon: Icons.account_balance_wallet_outlined,
-    ),
-  ];
+  static const MethodChannel _installedAppsChannel = MethodChannel(
+    'notecash/installed_apps',
+  );
 
-  late Set<String> _trackedAppKeys = _appOptions.map((e) => e.key).toSet();
+  final TextEditingController _searchController = TextEditingController();
+
+  List<_InstalledAppOption> _installedApps = [];
+  bool _loadingInstalledApps = false;
+
+  Set<String> _trackedPackageNames = {};
   bool _loadedTrackedApps = false;
 
   @override
@@ -56,9 +33,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _loadTrackedApps() async {
     final settings = await ref.read(isarServiceProvider).getUserSettings();
-    final saved = settings?.trackedNotificationApps;
-    if (saved != null && saved.isNotEmpty) {
-      _trackedAppKeys = saved.toSet();
+    final savedPackages =
+        settings?.trackedNotificationPackages ?? const <String>[];
+    if (savedPackages.isNotEmpty) {
+      _trackedPackageNames = savedPackages.toSet();
     }
     if (mounted) {
       setState(() {
@@ -67,9 +45,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _ensureInstalledAppsLoaded() async {
+    if (_installedApps.isNotEmpty) return;
+    if (_loadingInstalledApps) return;
+
+    setState(() {
+      _loadingInstalledApps = true;
+    });
+
+    try {
+      final raw = await _installedAppsChannel.invokeMethod<List<dynamic>>(
+        'listInstalledApps',
+      );
+      final apps = (raw ?? const <dynamic>[])
+          .whereType<Map>()
+          .map((m) {
+            final packageName = (m['packageName'] as String?) ?? '';
+            final label = (m['label'] as String?) ?? packageName;
+            if (packageName.isEmpty) return null;
+            return _InstalledAppOption(packageName: packageName, label: label);
+          })
+          .whereType<_InstalledAppOption>()
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          _installedApps = apps;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _installedApps = [];
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingInstalledApps = false;
+        });
+      }
+    }
+  }
+
   Future<void> _openTrackedAppsPicker() async {
+    await _ensureInstalledAppsLoaded();
+    if (!mounted) return;
     final colorScheme = Theme.of(context).colorScheme;
-    final tempSelection = {..._trackedAppKeys};
+    final tempSelection = {..._trackedPackageNames};
+    _searchController.text = '';
 
     await showModalBottomSheet<void>(
       context: context,
@@ -78,6 +108,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final query = _searchController.text.trim().toLowerCase();
+            final filtered = query.isEmpty
+                ? _installedApps
+                : _installedApps
+                      .where(
+                        (a) =>
+                            a.label.toLowerCase().contains(query) ||
+                            a.packageName.toLowerCase().contains(query),
+                      )
+                      .toList();
+
             return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -99,31 +140,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Flexible(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: _appOptions.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final opt = _appOptions[index];
-                          final checked = tempSelection.contains(opt.key);
-                          return CheckboxListTile(
-                            value: checked,
-                            onChanged: (value) {
-                              setModalState(() {
-                                if (value == true) {
-                                  tempSelection.add(opt.key);
-                                } else {
-                                  tempSelection.remove(opt.key);
-                                }
-                              });
-                            },
-                            title: Text(opt.label),
-                            secondary: Icon(opt.icon),
-                            controlAffinity: ListTileControlAffinity.trailing,
-                          );
-                        },
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setModalState(() {}),
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.search),
+                        hintText: 'Tìm theo tên hoặc package',
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: _loadingInstalledApps
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, __) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final opt = filtered[index];
+                                final checked = tempSelection.contains(
+                                  opt.packageName,
+                                );
+                                return CheckboxListTile(
+                                  value: checked,
+                                  onChanged: (value) {
+                                    setModalState(() {
+                                      if (value == true) {
+                                        tempSelection.add(opt.packageName);
+                                      } else {
+                                        tempSelection.remove(opt.packageName);
+                                      }
+                                    });
+                                  },
+                                  title: Text(opt.label),
+                                  subtitle: Text(opt.packageName),
+                                  secondary: const Icon(Icons.apps_outlined),
+                                  controlAffinity:
+                                      ListTileControlAffinity.trailing,
+                                );
+                              },
+                            ),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -138,12 +199,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Expanded(
                           child: FilledButton(
                             onPressed: () async {
-                              await NotificationRecognitionService.updateTrackedApps(
+                              await NotificationRecognitionService.updateTrackedPackages(
                                 tempSelection,
                               );
                               if (mounted) {
                                 setState(() {
-                                  _trackedAppKeys = tempSelection;
+                                  _trackedPackageNames = tempSelection;
                                 });
                               }
                               if (context.mounted) {
@@ -209,7 +270,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Ứng dụng theo dõi',
               subtitle: 'Chọn app ngân hàng/ví để nhận diện giao dịch',
               trailing: _loadedTrackedApps
-                  ? Text('${_trackedAppKeys.length} app')
+                  ? Text('${_trackedPackageNames.length} app')
                   : const SizedBox(
                       width: 16,
                       height: 16,
@@ -306,14 +367,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-class _TrackedAppOption {
-  final String key;
+class _InstalledAppOption {
+  final String packageName;
   final String label;
-  final IconData icon;
 
-  const _TrackedAppOption({
-    required this.key,
-    required this.label,
-    required this.icon,
-  });
+  const _InstalledAppOption({required this.packageName, required this.label});
 }

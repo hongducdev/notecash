@@ -1,6 +1,8 @@
 package com.hongducdev.notecash
 
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -25,6 +27,39 @@ class MainActivity : FlutterActivity() {
                         result.success(true)
                     } catch (e: Exception) {
                         result.success(false)
+                    }
+                }
+
+                else -> result.notImplemented()
+            }
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "notecash/installed_apps",
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "listInstalledApps" -> {
+                    try {
+                        val pm = applicationContext.packageManager
+                        val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+
+                        val resultList = apps.mapNotNull { appInfo ->
+                            val packageName = appInfo.packageName ?: return@mapNotNull null
+                            if (packageName == applicationContext.packageName) return@mapNotNull null
+                            val isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                            val isUpdatedSystemApp = (appInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
+                            if (isSystemApp || isUpdatedSystemApp) return@mapNotNull null
+                            val label = pm.getApplicationLabel(appInfo).toString()
+                            mapOf(
+                                "packageName" to packageName,
+                                "label" to label,
+                            )
+                        }.sortedBy { it["label"] as String }
+
+                        result.success(resultList)
+                    } catch (e: Exception) {
+                        result.success(emptyList<Map<String, Any>>())
                     }
                 }
 

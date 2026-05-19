@@ -18,12 +18,16 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
   final _controller = TextEditingController();
   final _parser = ExpenseParserService();
   Expense? _previewExpense;
+  bool _isIncomeSelection = false;
+  PaymentMethod _paymentMethodSelection = PaymentMethod.cash;
 
   @override
   void initState() {
     super.initState();
     if (widget.expenseToEdit != null) {
       _previewExpense = widget.expenseToEdit;
+      _isIncomeSelection = widget.expenseToEdit!.isIncome;
+      _paymentMethodSelection = widget.expenseToEdit!.paymentMethod;
       // Pre-fill controller with a string that would parse to this expense
       final amountStr = widget.expenseToEdit!.amount.toInt().toString();
       _controller.text = "${widget.expenseToEdit!.note} $amountStr";
@@ -37,7 +41,13 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
       return;
     }
     setState(() {
-      _previewExpense = _parser.parse(_controller.text);
+      _previewExpense = _parser.parse(_controller.text)
+        ..isIncome = _isIncomeSelection
+        ..paymentMethod = _paymentMethodSelection;
+
+      if (_previewExpense!.isIncome) {
+        _previewExpense!.category = ExpenseCategory.income;
+      }
     });
   }
 
@@ -135,52 +145,56 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
                 onSubmitted: (_) => _save(),
               ),
               const SizedBox(height: 16),
-              if (_previewExpense != null)
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(
-                      value: false,
-                      label: Text('Chi tiêu'),
-                      icon: Icon(Icons.remove_circle_outline),
-                    ),
-                    ButtonSegment(
-                      value: true,
-                      label: Text('Thu nhập'),
-                      icon: Icon(Icons.add_circle_outline),
-                    ),
-                  ],
-                  selected: {_previewExpense!.isIncome},
-                  onSelectionChanged: (Set<bool> newSelection) {
-                    setState(() {
-                      _previewExpense!.isIncome = newSelection.first;
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(
+                    value: false,
+                    label: Text('Chi tiêu'),
+                    icon: Icon(Icons.remove_circle_outline),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    label: Text('Thu nhập'),
+                    icon: Icon(Icons.add_circle_outline),
+                  ),
+                ],
+                selected: {_isIncomeSelection},
+                onSelectionChanged: (Set<bool> newSelection) {
+                  setState(() {
+                    _isIncomeSelection = newSelection.first;
+                    if (_previewExpense != null) {
+                      _previewExpense!.isIncome = _isIncomeSelection;
                       if (_previewExpense!.isIncome) {
                         _previewExpense!.category = ExpenseCategory.income;
                       }
-                    });
-                  },
-                ),
+                    }
+                  });
+                },
+              ),
               const SizedBox(height: 16),
-              if (_previewExpense != null)
-                SegmentedButton<PaymentMethod>(
-                  segments: const [
-                    ButtonSegment(
-                      value: PaymentMethod.cash,
-                      label: Text('Tiền mặt'),
-                      icon: Icon(Icons.payments_outlined),
-                    ),
-                    ButtonSegment(
-                      value: PaymentMethod.bank,
-                      label: Text('Ngân hàng'),
-                      icon: Icon(Icons.account_balance_outlined),
-                    ),
-                  ],
-                  selected: {_previewExpense!.paymentMethod},
-                  onSelectionChanged: (Set<PaymentMethod> newSelection) {
-                    setState(() {
-                      _previewExpense!.paymentMethod = newSelection.first;
-                    });
-                  },
-                ),
+              SegmentedButton<PaymentMethod>(
+                segments: const [
+                  ButtonSegment(
+                    value: PaymentMethod.cash,
+                    label: Text('Tiền mặt'),
+                    icon: Icon(Icons.payments_outlined),
+                  ),
+                  ButtonSegment(
+                    value: PaymentMethod.bank,
+                    label: Text('Ngân hàng'),
+                    icon: Icon(Icons.account_balance_outlined),
+                  ),
+                ],
+                selected: {_paymentMethodSelection},
+                onSelectionChanged: (Set<PaymentMethod> newSelection) {
+                  setState(() {
+                    _paymentMethodSelection = newSelection.first;
+                    if (_previewExpense != null) {
+                      _previewExpense!.paymentMethod = _paymentMethodSelection;
+                    }
+                  });
+                },
+              ),
               const SizedBox(
                 height: 100,
               ), // Khoảng trống để không bị Preview Card đè

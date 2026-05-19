@@ -37,8 +37,13 @@ const UserSettingsSchema = CollectionSchema(
       name: r'trackedNotificationApps',
       type: IsarType.stringList,
     ),
-    r'updatedAt': PropertySchema(
+    r'trackedNotificationPackages': PropertySchema(
       id: 4,
+      name: r'trackedNotificationPackages',
+      type: IsarType.stringList,
+    ),
+    r'updatedAt': PropertySchema(
+      id: 5,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -70,6 +75,13 @@ int _userSettingsEstimateSize(
       bytesCount += value.length * 3;
     }
   }
+  bytesCount += 3 + object.trackedNotificationPackages.length * 3;
+  {
+    for (var i = 0; i < object.trackedNotificationPackages.length; i++) {
+      final value = object.trackedNotificationPackages[i];
+      bytesCount += value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -83,7 +95,8 @@ void _userSettingsSerialize(
   writer.writeDouble(offsets[1], object.initialCashBalance);
   writer.writeBool(offsets[2], object.isSetupCompleted);
   writer.writeStringList(offsets[3], object.trackedNotificationApps);
-  writer.writeDateTime(offsets[4], object.updatedAt);
+  writer.writeStringList(offsets[4], object.trackedNotificationPackages);
+  writer.writeDateTime(offsets[5], object.updatedAt);
 }
 
 UserSettings _userSettingsDeserialize(
@@ -98,7 +111,8 @@ UserSettings _userSettingsDeserialize(
   object.initialCashBalance = reader.readDouble(offsets[1]);
   object.isSetupCompleted = reader.readBool(offsets[2]);
   object.trackedNotificationApps = reader.readStringList(offsets[3]) ?? [];
-  object.updatedAt = reader.readDateTimeOrNull(offsets[4]);
+  object.trackedNotificationPackages = reader.readStringList(offsets[4]) ?? [];
+  object.updatedAt = reader.readDateTimeOrNull(offsets[5]);
   return object;
 }
 
@@ -118,6 +132,8 @@ P _userSettingsDeserializeProp<P>(
     case 3:
       return (reader.readStringList(offset) ?? []) as P;
     case 4:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 5:
       return (reader.readDateTimeOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -641,6 +657,233 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'trackedNotificationPackages',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'trackedNotificationPackages',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'trackedNotificationPackages',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'trackedNotificationPackages',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'trackedNotificationPackages',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'trackedNotificationPackages',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementContains(String value,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'trackedNotificationPackages',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'trackedNotificationPackages',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'trackedNotificationPackages',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'trackedNotificationPackages',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'trackedNotificationPackages',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'trackedNotificationPackages',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'trackedNotificationPackages',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'trackedNotificationPackages',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'trackedNotificationPackages',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+      trackedNotificationPackagesLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'trackedNotificationPackages',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
       updatedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -877,6 +1120,13 @@ extension UserSettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<UserSettings, UserSettings, QDistinct>
+      distinctByTrackedNotificationPackages() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'trackedNotificationPackages');
+    });
+  }
+
   QueryBuilder<UserSettings, UserSettings, QDistinct> distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
@@ -917,6 +1167,13 @@ extension UserSettingsQueryProperty
       trackedNotificationAppsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'trackedNotificationApps');
+    });
+  }
+
+  QueryBuilder<UserSettings, List<String>, QQueryOperations>
+      trackedNotificationPackagesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'trackedNotificationPackages');
     });
   }
 
