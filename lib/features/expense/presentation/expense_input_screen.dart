@@ -63,12 +63,17 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
 
     await service.saveExpense(_previewExpense!);
 
-    // Refresh providers
-    ref.invalidate(expensesProvider);
+    final savedDate = DateTime(
+      _previewExpense!.createdAt.year,
+      _previewExpense!.createdAt.month,
+      _previewExpense!.createdAt.day,
+    );
+    final monthKey = DateTime(savedDate.year, savedDate.month);
+
     ref.invalidate(todayExpensesProvider);
-    ref.invalidate(allExpensesProvider);
-    ref.invalidate(dateExpensesProvider);
-    ref.invalidate(cumulativeBalanceProvider);
+    ref.invalidate(dateExpensesProvider(savedDate));
+    ref.invalidate(monthExpensesProvider(monthKey));
+    ref.invalidate(cumulativeBalanceProvider(savedDate));
     ref.invalidate(cashBalanceProvider);
     ref.invalidate(bankBalanceProvider);
 
@@ -125,7 +130,7 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
                 style: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.5),
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 32),
@@ -138,7 +143,7 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
                   hintStyle: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.2),
+                    ).colorScheme.onSurface.withValues(alpha: 0.2),
                   ),
                   border: InputBorder.none,
                 ),
@@ -215,10 +220,12 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -253,7 +260,7 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.5),
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
               ],

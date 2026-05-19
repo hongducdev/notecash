@@ -24,7 +24,7 @@ class IsarService {
   }
 
   Future<UserSettings?> getUserSettings() async {
-    return await isar.userSettings.get(0);
+    return isar.userSettings.get(0);
   }
 
   Future<bool> isSetupCompleted() async {
@@ -52,7 +52,7 @@ class IsarService {
   }
 
   Future<List<Expense>> getAllExpenses() async {
-    return await isar.expenses.where().sortByCreatedAtDesc().findAll();
+    return isar.expenses.where().sortByCreatedAtDesc().findAll();
   }
 
   Future<List<Expense>> getTodayExpenses() async {
@@ -62,25 +62,39 @@ class IsarService {
 
   Future<List<Expense>> getExpensesByDate(DateTime date) async {
     final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-    return await isar.expenses
+    final endExclusive = startOfDay.add(const Duration(days: 1));
+    return isar.expenses
         .filter()
-        .createdAtBetween(startOfDay, endOfDay)
+        .createdAtBetween(startOfDay, endExclusive, includeUpper: false)
+        .sortByCreatedAtDesc()
+        .findAll();
+  }
+
+  Future<List<Expense>> getExpensesBetween(
+    DateTime startInclusive,
+    DateTime endExclusive,
+  ) async {
+    return isar.expenses
+        .filter()
+        .createdAtBetween(startInclusive, endExclusive, includeUpper: false)
         .sortByCreatedAtDesc()
         .findAll();
   }
 
   Future<double> getBalanceUntil(DateTime date) async {
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endExclusive = startOfDay.add(const Duration(days: 1));
     final expenses = await isar.expenses
         .filter()
-        .createdAtLessThan(endOfDay)
+        .createdAtLessThan(endExclusive)
         .findAll();
 
     final settings = await getUserSettings();
-    double balance = (settings?.initialCashBalance ?? 0) + (settings?.initialBankBalance ?? 0);
-    
-    for (var e in expenses) {
+    double balance =
+        (settings?.initialCashBalance ?? 0) +
+        (settings?.initialBankBalance ?? 0);
+
+    for (final e in expenses) {
       if (e.isIncome) {
         balance += e.amount;
       } else {
@@ -93,13 +107,13 @@ class IsarService {
   Future<double> getCashBalance() async {
     final settings = await getUserSettings();
     double balance = settings?.initialCashBalance ?? 0;
-    
+
     final expenses = await isar.expenses
         .filter()
         .paymentMethodEqualTo(PaymentMethod.cash)
         .findAll();
-        
-    for (var e in expenses) {
+
+    for (final e in expenses) {
       if (e.isIncome) {
         balance += e.amount;
       } else {
@@ -112,13 +126,13 @@ class IsarService {
   Future<double> getBankBalance() async {
     final settings = await getUserSettings();
     double balance = settings?.initialBankBalance ?? 0;
-    
+
     final expenses = await isar.expenses
         .filter()
         .paymentMethodEqualTo(PaymentMethod.bank)
         .findAll();
-        
-    for (var e in expenses) {
+
+    for (final e in expenses) {
       if (e.isIncome) {
         balance += e.amount;
       } else {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +37,8 @@ class NoteCashApp extends ConsumerStatefulWidget {
 
 class _NoteCashAppState extends ConsumerState<NoteCashApp>
     with WidgetsBindingObserver {
+  StreamSubscription<Uri?>? _homeWidgetClickSub;
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +49,7 @@ class _NoteCashAppState extends ConsumerState<NoteCashApp>
 
   @override
   void dispose() {
+    _homeWidgetClickSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -52,19 +57,19 @@ class _NoteCashAppState extends ConsumerState<NoteCashApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      NotificationRecognitionService.startListening();
+      unawaited(NotificationRecognitionService.startListening());
     }
   }
 
   void _setupHomeWidget() {
     HomeWidget.setAppGroupId('group.notecash');
     HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetLaunch);
-    HomeWidget.widgetClicked.listen(_handleWidgetLaunch);
+    _homeWidgetClickSub = HomeWidget.widgetClicked.listen(_handleWidgetLaunch);
   }
 
   void _setupNotificationListener() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      NotificationRecognitionService.startListening();
+      unawaited(NotificationRecognitionService.startListening());
     });
   }
 
@@ -84,13 +89,13 @@ class _NoteCashAppState extends ConsumerState<NoteCashApp>
         final lightScheme =
             lightDynamic ??
             ColorScheme.fromSeed(
-              seedColor: const Color(0xFF6366F1),
+              seedColor: const Color(0xFFD82D8B),
               brightness: Brightness.light,
             );
         final darkScheme =
             darkDynamic ??
             ColorScheme.fromSeed(
-              seedColor: const Color(0xFF6366F1),
+              seedColor: const Color(0xFFD82D8B),
               brightness: Brightness.dark,
             );
 

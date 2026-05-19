@@ -14,7 +14,8 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDate = ref.watch(selectedDateProvider);
     final dateExpensesAsync = ref.watch(dateExpensesProvider(selectedDate));
-    final allExpensesAsync = ref.watch(allExpensesProvider);
+    final monthKey = DateTime(selectedDate.year, selectedDate.month);
+    final monthExpensesAsync = ref.watch(monthExpensesProvider(monthKey));
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -43,7 +44,7 @@ class DashboardScreen extends ConsumerWidget {
                     _buildCalendar(
                       context,
                       ref,
-                      allExpensesAsync,
+                      monthExpensesAsync,
                       selectedDate,
                     ),
                     const SizedBox(height: 24),
@@ -211,7 +212,7 @@ class DashboardScreen extends ConsumerWidget {
       },
       loading: () =>
           const Card(child: SizedBox(height: 120, width: double.infinity)),
-      error: (_, __) =>
+      error: (_, _) =>
           const Card(child: SizedBox(height: 120, width: double.infinity)),
     );
   }
@@ -237,7 +238,7 @@ class DashboardScreen extends ConsumerWidget {
             height: 12,
             child: CircularProgressIndicator(strokeWidth: 1.5),
           ),
-          error: (_, __) => const Icon(Icons.error, size: 14),
+          error: (_, _) => const Icon(Icons.error, size: 14),
         ),
       ],
     );
@@ -273,17 +274,17 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildCalendar(
     BuildContext context,
     WidgetRef ref,
-    AsyncValue<List<Expense>> allExpensesAsync,
+    AsyncValue<List<Expense>> monthExpensesAsync,
     DateTime selectedDate,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       margin: EdgeInsets.zero,
-      child: allExpensesAsync.when(
-        data: (allExpenses) {
+      child: monthExpensesAsync.when(
+        data: (monthExpenses) {
           final Map<DateTime, List<Expense>> groupedExpenses = {};
-          for (var expense in allExpenses) {
+          for (final expense in monthExpenses) {
             final date = DateTime(
               expense.createdAt.year,
               expense.createdAt.month,
@@ -375,10 +376,11 @@ class DashboardScreen extends ConsumerWidget {
 
     if (expenses != null) {
       for (var e in expenses) {
-        if (e.isIncome)
+        if (e.isIncome) {
           totalIncome += e.amount;
-        else
+        } else {
           totalExpense += e.amount;
+        }
       }
     }
 
@@ -389,7 +391,7 @@ class DashboardScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? colorScheme.primaryContainer
-              : (isToday ? colorScheme.surfaceVariant : null),
+              : (isToday ? colorScheme.surfaceContainerHighest : null),
           borderRadius: BorderRadius.circular(8),
           border: isToday
               ? Border.all(color: colorScheme.primary, width: 1)
@@ -503,12 +505,18 @@ class _ExpenseTile extends ConsumerWidget {
                   final service = ref.read(isarServiceProvider);
                   await service.deleteExpense(expense.id);
 
-                  // Refresh all related providers
-                  ref.invalidate(expensesProvider);
+                  final selectedDate = ref.read(selectedDateProvider);
+                  final monthKey = DateTime(
+                    selectedDate.year,
+                    selectedDate.month,
+                  );
+
                   ref.invalidate(todayExpensesProvider);
-                  ref.invalidate(allExpensesProvider);
-                  ref.invalidate(dateExpensesProvider);
-                  ref.invalidate(cumulativeBalanceProvider);
+                  ref.invalidate(dateExpensesProvider(selectedDate));
+                  ref.invalidate(monthExpensesProvider(monthKey));
+                  ref.invalidate(cumulativeBalanceProvider(selectedDate));
+                  ref.invalidate(cashBalanceProvider);
+                  ref.invalidate(bankBalanceProvider);
 
                   if (context.mounted) {
                     Navigator.pop(context);

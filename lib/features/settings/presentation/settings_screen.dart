@@ -159,7 +159,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             )
                           : ListView.separated(
                               itemCount: filtered.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const Divider(height: 1),
                               itemBuilder: (context, index) {
                                 final opt = filtered[index];
@@ -249,19 +249,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Nhận diện biến động số dư',
               subtitle: 'Tự động nhắc thêm giao dịch từ thông báo ngân hàng',
               onTap: () async {
-                bool hasPermission =
+                final hasPermission =
                     await NotificationListenerService.isPermissionGranted();
-                if (!hasPermission) {
-                  NotificationRecognitionService.startListening();
-                } else {
-                  NotificationRecognitionService.startListening();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tính năng đã được kích hoạt!'),
-                      ),
-                    );
-                  }
+                await NotificationRecognitionService.startListening();
+                if (hasPermission && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Tính năng đã được kích hoạt!'),
+                    ),
+                  );
                 }
               },
             ),
@@ -284,11 +280,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Icons.dark_mode_outlined,
               'Chế độ tối',
               trailing: const Text('Luôn bật'),
-            ),
-            _buildTile(
-              Icons.language_outlined,
-              'Ngôn ngữ',
-              trailing: const Text('Tiếng Việt'),
             ),
           ]),
           _buildSection('Dữ liệu', [
@@ -349,7 +340,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, size: 20),

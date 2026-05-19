@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notecash/core/providers.dart';
 import 'package:notecash/features/dashboard/presentation/dashboard_screen.dart';
+import 'package:notecash/services/notification_recognition_service.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -19,9 +21,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Future<void> _checkSetup() async {
+    final hasReadPermission =
+        await NotificationListenerService.isPermissionGranted();
+    final canSendNotifications =
+        await NotificationRecognitionService.areQuickAddNotificationsEnabled();
+
+    if ((!hasReadPermission || !canSendNotifications) && mounted) {
+      context.go('/notification-permission');
+      return;
+    }
+
     final isarService = ref.read(isarServiceProvider);
     final isCompleted = await isarService.isSetupCompleted();
-    
+
     if (!isCompleted && mounted) {
       context.go('/setup');
     }

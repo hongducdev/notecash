@@ -22,12 +22,7 @@ final bankBalanceProvider = FutureProvider<double>((ref) async {
   return service.getBankBalance();
 });
 
-final expensesProvider = FutureProvider((ref) async {
-  final service = ref.watch(isarServiceProvider);
-  return service.getAllExpenses();
-});
-
-final todayExpensesProvider = FutureProvider((ref) async {
+final todayExpensesProvider = FutureProvider<List<Expense>>((ref) async {
   final service = ref.watch(isarServiceProvider);
   return service.getTodayExpenses();
 });
@@ -52,7 +47,17 @@ final cumulativeBalanceProvider = FutureProvider.family<double, DateTime>((
   return service.getBalanceUntil(date);
 });
 
-final allExpensesProvider = FutureProvider((ref) async {
+final monthExpensesProvider = FutureProvider.family<List<Expense>, DateTime>((
+  ref,
+  monthKey,
+) async {
+  final service = ref.watch(isarServiceProvider);
+  final start = DateTime(monthKey.year, monthKey.month);
+  final end = DateTime(monthKey.year, monthKey.month + 1);
+  return service.getExpensesBetween(start, end);
+});
+
+final allExpensesProvider = FutureProvider<List<Expense>>((ref) async {
   final service = ref.watch(isarServiceProvider);
   return service.getAllExpenses();
 });

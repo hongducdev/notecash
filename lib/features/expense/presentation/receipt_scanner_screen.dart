@@ -60,12 +60,19 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
     final service = ref.read(isarServiceProvider);
     await service.saveExpense(_scannedResult!);
 
-    // Refresh providers
-    ref.invalidate(expensesProvider);
+    final savedDate = DateTime(
+      _scannedResult!.createdAt.year,
+      _scannedResult!.createdAt.month,
+      _scannedResult!.createdAt.day,
+    );
+    final monthKey = DateTime(savedDate.year, savedDate.month);
+
     ref.invalidate(todayExpensesProvider);
-    ref.invalidate(allExpensesProvider);
-    ref.invalidate(dateExpensesProvider);
-    ref.invalidate(cumulativeBalanceProvider);
+    ref.invalidate(dateExpensesProvider(savedDate));
+    ref.invalidate(monthExpensesProvider(monthKey));
+    ref.invalidate(cumulativeBalanceProvider(savedDate));
+    ref.invalidate(cashBalanceProvider);
+    ref.invalidate(bankBalanceProvider);
 
     if (mounted) {
       context.pop();
@@ -260,8 +267,9 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
                     dropdownColor: colorScheme.surfaceContainerLow,
                     value: _scannedResult!.category,
                     onChanged: (val) {
-                      if (val != null)
+                      if (val != null) {
                         setState(() => _scannedResult!.category = val);
+                      }
                     },
                     items: ExpenseCategory.values.map((cat) {
                       return DropdownMenuItem(
