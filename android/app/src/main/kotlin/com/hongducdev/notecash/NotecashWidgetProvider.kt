@@ -1,4 +1,4 @@
-package com.example.notecash
+package com.hongducdev.notecash
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager

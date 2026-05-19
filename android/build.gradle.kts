@@ -20,7 +20,7 @@ subprojects {
 }
 
 subprojects {
-    val configureNamespace = Action<Project> {
+    val configureAndroid = Action<Project> {
         if (hasProperty("android")) {
             val android = extensions.getByName("android")
             if (android is com.android.build.gradle.BaseExtension) {
@@ -28,14 +28,22 @@ subprojects {
                     val group = project.group.toString()
                     android.namespace = if (group.isNotEmpty()) group else "dev.isar.${project.name.replace("-", "_")}"
                 }
+                // Try to set versions. If it's already too late for some, we might need a different strategy,
+                // but usually compileSdkVersion can be set in afterEvaluate if not already finalized.
+                try {
+                    android.compileSdkVersion(34)
+                    android.defaultConfig.targetSdkVersion(34)
+                } catch (e: Exception) {
+                    // Log or handle if needed
+                }
             }
         }
     }
 
     if (state.executed) {
-        configureNamespace.execute(this)
+        configureAndroid.execute(this)
     } else {
-        afterEvaluate { configureNamespace.execute(this) }
+        afterEvaluate { configureAndroid.execute(this) }
     }
 }
 

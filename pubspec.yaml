@@ -48,6 +48,8 @@ dependencies:
 
     # UI & Utilities
     dynamic_color: ^1.7.0
+    flutter_local_notifications: ^17.2.1
+    flutter_notification_listener: ^1.4.0
     table_calendar: ^3.1.2
     image_picker: ^1.1.2
     google_mlkit_text_recognition: ^0.13.0
@@ -81,11 +83,11 @@ flutter_native_splash:
         color_dark: "#1A1A1A"
 
 flutter_launcher_icons:
-     android: true
-     ios: true
-     image_path: "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
-     adaptive_icon_background: "#1A1A1A"
-     adaptive_icon_foreground: "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+    android: true
+    ios: true
+    image_path: "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+    adaptive_icon_background: "#1A1A1A"
+    adaptive_icon_foreground: "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

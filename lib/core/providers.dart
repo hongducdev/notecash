@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
+import 'package:notecash/features/notification_log/domain/notification_log.dart';
 import 'package:notecash/services/isar_service.dart';
 
 final isarServiceProvider = Provider<IsarService>((ref) {
@@ -33,4 +34,14 @@ final cumulativeBalanceProvider = FutureProvider.family<double, DateTime>((ref, 
 final allExpensesProvider = FutureProvider((ref) async {
   final service = ref.watch(isarServiceProvider);
   return service.getAllExpenses();
+});
+
+final notificationLogsProvider = FutureProvider<List<NotificationLog>>((ref) async {
+  final service = ref.watch(isarServiceProvider);
+  return service.getAllNotificationLogs();
+});
+
+final unreadNotificationLogsProvider = FutureProvider<List<NotificationLog>>((ref) async {
+  final service = ref.watch(isarServiceProvider);
+  return service.getUnreadNotificationLogs();
 });

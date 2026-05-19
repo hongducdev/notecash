@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_notification_listener/flutter_notification_listener.dart';
+import 'package:notecash/services/notification_recognition_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -13,6 +15,31 @@ class SettingsScreen extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          _buildSection('Tính năng thông minh', [
+            _buildTile(
+              Icons.notifications_active_outlined,
+              'Nhận diện biến động số dư',
+              subtitle: 'Tự động nhắc thêm giao dịch từ thông báo ngân hàng',
+              onTap: () async {
+                bool hasPermission =
+                    await NotificationsListener.hasPermission ?? false;
+                if (!hasPermission) {
+                  await NotificationsListener.openPermissionSettings();
+                  // Sau khi user cấp quyền và quay lại, user cần bấm lại
+                } else {
+                  await NotificationRecognitionService
+                      .setupListenerAfterPermission();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tính năng đã được kích hoạt!'),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ]),
           _buildSection('Chung', [
             _buildTile(
               Icons.dark_mode_outlined,
@@ -71,7 +98,13 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTile(IconData icon, String title, {Widget? trailing}) {
+  Widget _buildTile(
+    IconData icon,
+    String title, {
+    Widget? trailing,
+    String? subtitle,
+    VoidCallback? onTap,
+  }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
       leading: Container(
@@ -83,8 +116,14 @@ class SettingsScreen extends StatelessWidget {
         child: Icon(icon, size: 20),
       ),
       title: Text(title, style: const TextStyle(fontSize: 16)),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: const TextStyle(fontSize: 12, color: Colors.white38),
+            )
+          : null,
       trailing: trailing,
-      onTap: () {},
+      onTap: onTap ?? () {},
     );
   }
 }

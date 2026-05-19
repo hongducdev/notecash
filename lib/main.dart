@@ -6,15 +6,18 @@ import 'package:notecash/core/providers.dart';
 import 'package:notecash/core/router.dart';
 import 'package:notecash/core/theme.dart';
 import 'package:notecash/services/home_widget_service.dart';
+import 'package:notecash/services/notification_recognition_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await HomeWidgetService.init();
+  await NotificationRecognitionService.init();
 
   final container = ProviderContainer();
   final isarService = container.read(isarServiceProvider);
   await isarService.init();
+  NotificationRecognitionService.setDatabaseService(isarService);
 
   runApp(
     UncontrolledProviderScope(container: container, child: const NoteCashApp()),
@@ -33,12 +36,17 @@ class _NoteCashAppState extends ConsumerState<NoteCashApp> {
   void initState() {
     super.initState();
     _setupHomeWidget();
+    _setupNotificationListener();
   }
 
   void _setupHomeWidget() {
     HomeWidget.setAppGroupId('group.notecash');
     HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetLaunch);
     HomeWidget.widgetClicked.listen(_handleWidgetLaunch);
+  }
+
+  void _setupNotificationListener() {
+    NotificationRecognitionService.startListening();
   }
 
   void _handleWidgetLaunch(Uri? uri) {
