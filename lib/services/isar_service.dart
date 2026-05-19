@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'package:notecash/core/models/user_settings.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
 import 'package:notecash/features/notification_log/domain/notification_log.dart';
 import 'package:notecash/services/home_widget_service.dart';
@@ -9,11 +10,28 @@ class IsarService {
 
   Future<void> init() async {
     final dir = await getApplicationDocumentsDirectory();
-    isar = await Isar.open(
-      [ExpenseSchema, NotificationLogSchema],
-      directory: dir.path,
-    );
+    isar = await Isar.open([
+      ExpenseSchema,
+      NotificationLogSchema,
+      UserSettingsSchema,
+    ], directory: dir.path);
     await updateHomeWidget();
+  }
+
+  // User Settings Methods
+  Future<void> saveUserSettings(UserSettings settings) async {
+    await isar.writeTxn(() async {
+      await isar.userSettings.put(settings);
+    });
+  }
+
+  Future<UserSettings?> getUserSettings() async {
+    return await isar.userSettings.get(0);
+  }
+
+  Future<bool> isSetupCompleted() async {
+    final settings = await getUserSettings();
+    return settings?.isSetupCompleted ?? false;
   }
 
   Future<void> saveExpense(Expense expense) async {
@@ -61,10 +79,7 @@ class IsarService {
   }
 
   Future<List<NotificationLog>> getAllNotificationLogs() async {
-    return await isar.notificationLogs
-        .where()
-        .sortByReceivedAtDesc()
-        .findAll();
+    return await isar.notificationLogs.where().sortByReceivedAtDesc().findAll();
   }
 
   Future<List<NotificationLog>> getUnreadNotificationLogs() async {
@@ -110,8 +125,12 @@ class IsarService {
         .filter()
         .createdAtLessThan(endOfDay)
         .findAll();
-    
-    double balance = 0;
+
+    final settings = await getUserSettings();
+    double balance =
+        (settings?.initialCashBalance ?? 0) +
+        (settings?.initialBankBalance ?? 0);
+
     for (var e in expenses) {
       if (e.isIncome) {
         balance += e.amount;

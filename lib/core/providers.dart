@@ -1,10 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notecash/core/models/user_settings.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
 import 'package:notecash/features/notification_log/domain/notification_log.dart';
 import 'package:notecash/services/isar_service.dart';
 
 final isarServiceProvider = Provider<IsarService>((ref) {
   return IsarService();
+});
+
+final userSettingsProvider = FutureProvider<UserSettings?>((ref) async {
+  final service = ref.watch(isarServiceProvider);
+  return service.getUserSettings();
 });
 
 final expensesProvider = FutureProvider((ref) async {

@@ -38,10 +38,12 @@ class AppLogo extends StatelessWidget {
               ),
             ],
           ),
-          child: Icon(
-            Icons.account_balance_wallet_rounded,
-            color: colorScheme.onPrimary,
-            size: size * 0.6,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(size * 0.25),
+            child: Image.asset(
+              'assets/icon/image.png',
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         if (showText) ...[

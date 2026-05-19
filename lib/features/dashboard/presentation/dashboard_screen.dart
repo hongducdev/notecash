@@ -122,6 +122,7 @@ class DashboardScreen extends ConsumerWidget {
     final cumulativeBalanceAsync = ref.watch(
       cumulativeBalanceProvider(selectedDate),
     );
+    final userSettingsAsync = ref.watch(userSettingsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
     return dateExpensesAsync.when(
@@ -177,32 +178,56 @@ class DashboardScreen extends ConsumerWidget {
                   ],
                 ),
                 const Divider(height: 32),
+                userSettingsAsync.when(
+                  data: (settings) {
+                    if (settings == null) return const SizedBox.shrink();
+                    return Column(
+                      children: [
+                        _buildBalanceRow(
+                          context,
+                          'Tiền mặt',
+                          settings.initialCashBalance,
+                          colorScheme.onSurfaceVariant,
+                          currencyFormat,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildBalanceRow(
+                          context,
+                          'Ngân hàng',
+                          settings.initialBankBalance,
+                          colorScheme.onSurfaceVariant,
+                          currencyFormat,
+                        ),
+                        const Divider(height: 24),
+                      ],
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Tổng số dư',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     cumulativeBalanceAsync.when(
                       data: (balance) => Text(
                         currencyFormat.format(balance),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: balance >= 0
-                                  ? Colors.green
-                                  : Colors.redAccent,
-                            ),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: balance >= 0 ? Colors.green : Colors.redAccent,
+                        ),
                       ),
                       loading: () => const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                      error: (_, __) => const Text('Lỗi'),
+                      error: (err, _) => const Icon(Icons.error, size: 20),
                     ),
                   ],
                 ),
@@ -215,6 +240,28 @@ class DashboardScreen extends ConsumerWidget {
           const Card(child: SizedBox(height: 120, width: double.infinity)),
       error: (_, __) =>
           const Card(child: SizedBox(height: 120, width: double.infinity)),
+    );
+  }
+
+  Widget _buildBalanceRow(
+    BuildContext context,
+    String label,
+    double amount,
+    Color color,
+    NumberFormat format,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 14, color: color),
+        ),
+        Text(
+          format.format(amount),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+      ],
     );
   }
 
