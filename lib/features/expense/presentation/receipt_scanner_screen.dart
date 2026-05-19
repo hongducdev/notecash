@@ -21,8 +21,14 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
   final ImagePicker _picker = ImagePicker();
   final OcrService _ocrService = OcrService();
   bool _isScanning = false;
-  Expense? _scannedResult;
+  ReceiptScanResult? _scanResult;
   File? _imageFile;
+  PaymentMethod _paymentMethodSelection = PaymentMethod.cash;
+  _ReceiptSaveMode _saveMode = _ReceiptSaveMode.multiple;
+  List<_ReceiptItemDraft> _itemDrafts = <_ReceiptItemDraft>[];
+  String _merchantDraft = '';
+  ExpenseCategory _singleCategoryDraft = ExpenseCategory.other;
+  double _singleTotalDraft = 0;
 
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(
@@ -34,13 +40,32 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
       setState(() {
         _imageFile = File(pickedFile.path);
         _isScanning = true;
-        _scannedResult = null;
+        _scanResult = null;
+        _itemDrafts = <_ReceiptItemDraft>[];
       });
 
       try {
-        final result = await _ocrService.scanReceipt(_imageFile!);
+        final result = await _ocrService.scanReceiptDetailed(_imageFile!);
         setState(() {
-          _scannedResult = result;
+          _scanResult = result;
+          _merchantDraft = result?.merchant ?? '';
+          _singleTotalDraft = result?.total ?? 0;
+          _singleCategoryDraft = result == null
+              ? ExpenseCategory.other
+              : _detectCategoryForReceipt(result);
+          _itemDrafts = (result?.items ?? const <ReceiptItem>[])
+              .map(
+                (e) => _ReceiptItemDraft(
+                  name: e.name,
+                  amount: e.amount,
+                  category: e.category,
+                  confidence: e.confidence,
+                ),
+              )
+              .toList();
+          _saveMode = _itemDrafts.length >= 2
+              ? _ReceiptSaveMode.multiple
+              : _ReceiptSaveMode.single;
           _isScanning = false;
         });
       } catch (e) {
@@ -55,16 +80,46 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
   }
 
   Future<void> _save() async {
-    if (_scannedResult == null) return;
-
     final service = ref.read(isarServiceProvider);
-    await service.saveExpense(_scannedResult!);
 
-    final savedDate = DateTime(
-      _scannedResult!.createdAt.year,
-      _scannedResult!.createdAt.month,
-      _scannedResult!.createdAt.day,
-    );
+    final now = DateTime.now();
+    final savedDate = DateTime(now.year, now.month, now.day);
+
+    if (_saveMode == _ReceiptSaveMode.single) {
+      if (_singleTotalDraft <= 0) return;
+      final expense = Expense()
+        ..note = _merchantDraft.trim().isEmpty
+            ? 'Hóa đơn'
+            : _merchantDraft.trim()
+        ..amount = _singleTotalDraft
+        ..category = _singleCategoryDraft
+        ..isIncome = false
+        ..paymentMethod = _paymentMethodSelection
+        ..createdAt = now;
+
+      await service.saveExpense(expense);
+    } else {
+      final items = _itemDrafts
+          .where((e) => !e.deleted)
+          .where((e) => e.amount > 0 && e.name.trim().isNotEmpty)
+          .toList(growable: false);
+      if (items.isEmpty) return;
+
+      final expenses = items
+          .map(
+            (e) => Expense()
+              ..note = e.name.trim()
+              ..amount = e.amount
+              ..category = e.category
+              ..isIncome = false
+              ..paymentMethod = _paymentMethodSelection
+              ..createdAt = now,
+          )
+          .toList(growable: false);
+
+      await service.saveExpenses(expenses);
+    }
+
     final monthKey = DateTime(savedDate.year, savedDate.month);
 
     ref.invalidate(todayExpensesProvider);
@@ -99,7 +154,7 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
         ),
         iconTheme: IconThemeData(color: colorScheme.onSurface),
         actions: [
-          if (_scannedResult != null)
+          if (_scanResult != null)
             TextButton(
               onPressed: _save,
               child: Text(
@@ -126,7 +181,7 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
 
             if (_isScanning)
               _buildScanningIndicator(colorScheme)
-            else if (_scannedResult != null)
+            else if (_scanResult != null)
               _buildResultCard(colorScheme)
             else
               _buildActionButtons(colorScheme),
@@ -177,7 +232,8 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
           IconButton.filledTonal(
             onPressed: () => setState(() {
               _imageFile = null;
-              _scannedResult = null;
+              _scanResult = null;
+              _itemDrafts = <_ReceiptItemDraft>[];
             }),
             icon: const Icon(Icons.close),
           ),
@@ -204,6 +260,9 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
 
   Widget _buildResultCard(ColorScheme colorScheme) {
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final scan = _scanResult;
+    final items = _itemDrafts.where((e) => !e.deleted).toList(growable: false);
+    final itemsSum = items.fold<double>(0, (acc, e) => acc + e.amount);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,52 +295,143 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildEditableRow(
-                  'Ghi chú',
-                  _scannedResult!.note,
-                  (val) => _scannedResult!.note = val,
-                  colorScheme,
+                Row(
+                  children: [
+                    Expanded(
+                      child: SegmentedButton<_ReceiptSaveMode>(
+                        segments: const [
+                          ButtonSegment(
+                            value: _ReceiptSaveMode.multiple,
+                            label: Text('Nhiều khoản'),
+                            icon: Icon(Icons.view_list_outlined),
+                          ),
+                          ButtonSegment(
+                            value: _ReceiptSaveMode.single,
+                            label: Text('1 khoản'),
+                            icon: Icon(Icons.summarize_outlined),
+                          ),
+                        ],
+                        selected: {_saveMode},
+                        onSelectionChanged: (s) {
+                          setState(() {
+                            _saveMode = s.first;
+                            if (_saveMode == _ReceiptSaveMode.single) {
+                              if (_singleTotalDraft <= 0 && scan != null) {
+                                _singleTotalDraft = scan.total;
+                              }
+                              if (_merchantDraft.trim().isEmpty &&
+                                  scan != null) {
+                                _merchantDraft = scan.merchant;
+                              }
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-                Divider(color: colorScheme.outlineVariant),
-                _buildEditableRow(
-                  'Số tiền',
-                  currencyFormat.format(_scannedResult!.amount),
-                  (val) {
-                    final cleanVal = val.replaceAll(RegExp(r'[^0-9]'), '');
-                    _scannedResult!.amount = double.tryParse(cleanVal) ?? 0;
-                  },
-                  colorScheme,
-                  keyboardType: TextInputType.number,
+                const SizedBox(height: 12),
+                SegmentedButton<PaymentMethod>(
+                  segments: const [
+                    ButtonSegment(
+                      value: PaymentMethod.cash,
+                      label: Text('Tiền mặt'),
+                      icon: Icon(Icons.payments_outlined),
+                    ),
+                    ButtonSegment(
+                      value: PaymentMethod.bank,
+                      label: Text('Ngân hàng'),
+                      icon: Icon(Icons.account_balance_outlined),
+                    ),
+                  ],
+                  selected: {_paymentMethodSelection},
+                  onSelectionChanged: (s) =>
+                      setState(() => _paymentMethodSelection = s.first),
                 ),
-                Divider(color: colorScheme.outlineVariant),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    'Danh mục',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: colorScheme.onSurface,
+                const SizedBox(height: 12),
+                if (_saveMode == _ReceiptSaveMode.single) ...[
+                  _buildEditableRow(
+                    'Cửa hàng',
+                    _merchantDraft,
+                    (val) => _merchantDraft = val,
+                    colorScheme,
+                  ),
+                  Divider(color: colorScheme.outlineVariant),
+                  _buildEditableRow(
+                    'Tổng tiền',
+                    currencyFormat.format(_singleTotalDraft),
+                    (val) {
+                      final cleanVal = val.replaceAll(RegExp(r'[^0-9]'), '');
+                      _singleTotalDraft = double.tryParse(cleanVal) ?? 0;
+                    },
+                    colorScheme,
+                    keyboardType: TextInputType.number,
+                  ),
+                  Divider(color: colorScheme.outlineVariant),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      'Danh mục',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    trailing: DropdownButton<ExpenseCategory>(
+                      dropdownColor: colorScheme.surfaceContainerLow,
+                      value: _singleCategoryDraft,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _singleCategoryDraft = val);
+                        }
+                      },
+                      items: ExpenseCategory.values.map((cat) {
+                        return DropdownMenuItem(
+                          value: cat,
+                          child: Text(
+                            _getCategoryName(cat),
+                            style: TextStyle(color: colorScheme.onSurface),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
-                  trailing: DropdownButton<ExpenseCategory>(
-                    dropdownColor: colorScheme.surfaceContainerLow,
-                    value: _scannedResult!.category,
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() => _scannedResult!.category = val);
-                      }
-                    },
-                    items: ExpenseCategory.values.map((cat) {
-                      return DropdownMenuItem(
-                        value: cat,
-                        child: Text(
-                          _getCategoryName(cat),
-                          style: TextStyle(color: colorScheme.onSurface),
+                ] else ...[
+                  if (items.isEmpty)
+                    Text(
+                      'Không tìm thấy item rõ ràng. Chuyển qua “1 khoản” để lưu tổng tiền.',
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                    )
+                  else
+                    Column(
+                      children: [
+                        for (final item in _itemDrafts)
+                          if (!item.deleted)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: _ReceiptItemEditor(
+                                draft: item,
+                                currencyFormat: currencyFormat,
+                                onChanged: () => setState(() {}),
+                                onDelete: () =>
+                                    setState(() => item.deleted = true),
+                              ),
+                            ),
+                        Divider(color: colorScheme.outlineVariant),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Tổng'),
+                          trailing: Text(
+                            currencyFormat.format(itemsSum),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                ),
+                      ],
+                    ),
+                ],
               ],
             ),
           ),
@@ -348,6 +498,166 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  String _getCategoryName(ExpenseCategory category) {
+    switch (category) {
+      case ExpenseCategory.foodAndDrink:
+        return 'Ăn uống';
+      case ExpenseCategory.transport:
+        return 'Di chuyển';
+      case ExpenseCategory.shopping:
+        return 'Mua sắm';
+      case ExpenseCategory.bills:
+        return 'Hóa đơn';
+      case ExpenseCategory.entertainment:
+        return 'Giải trí';
+      case ExpenseCategory.income:
+        return 'Thu nhập';
+      default:
+        return 'Khác';
+    }
+  }
+
+  ExpenseCategory _detectCategoryForReceipt(ReceiptScanResult result) {
+    if (result.items.isEmpty) return ExpenseCategory.other;
+    final counts = <ExpenseCategory, int>{};
+    for (final i in result.items) {
+      counts[i.category] = (counts[i.category] ?? 0) + 1;
+    }
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return sorted.isEmpty ? ExpenseCategory.other : sorted.first.key;
+  }
+}
+
+enum _ReceiptSaveMode { multiple, single }
+
+class _ReceiptItemDraft {
+  String name;
+  double amount;
+  ExpenseCategory category;
+  double confidence;
+  bool deleted;
+
+  _ReceiptItemDraft({
+    required this.name,
+    required this.amount,
+    required this.category,
+    required this.confidence,
+  }) : deleted = false;
+}
+
+class _ReceiptItemEditor extends StatelessWidget {
+  final _ReceiptItemDraft draft;
+  final NumberFormat currencyFormat;
+  final VoidCallback onChanged;
+  final VoidCallback onDelete;
+
+  const _ReceiptItemEditor({
+    required this.draft,
+    required this.currencyFormat,
+    required this.onChanged,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  initialValue: draft.name,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
+                  onChanged: (v) {
+                    draft.name = v;
+                    onChanged();
+                  },
+                ),
+              ),
+              IconButton(
+                onPressed: onDelete,
+                icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<ExpenseCategory>(
+                      value: draft.category,
+                      dropdownColor: colorScheme.surfaceContainerLow,
+                      isExpanded: true,
+                      onChanged: (val) {
+                        if (val == null) return;
+                        draft.category = val;
+                        onChanged();
+                      },
+                      items: ExpenseCategory.values
+                          .where((c) => c != ExpenseCategory.income)
+                          .map((cat) {
+                            return DropdownMenuItem(
+                              value: cat,
+                              child: Text(_getCategoryName(cat)),
+                            );
+                          })
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 140,
+                child: TextFormField(
+                  initialValue: currencyFormat.format(draft.amount),
+                  textAlign: TextAlign.end,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (val) {
+                    final cleanVal = val.replaceAll(RegExp(r'[^0-9]'), '');
+                    draft.amount = double.tryParse(cleanVal) ?? 0;
+                    onChanged();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

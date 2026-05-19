@@ -39,6 +39,14 @@ class IsarService {
     await updateHomeWidget();
   }
 
+  Future<void> saveExpenses(List<Expense> expenses) async {
+    if (expenses.isEmpty) return;
+    await isar.writeTxn(() async {
+      await isar.expenses.putAll(expenses);
+    });
+    await updateHomeWidget();
+  }
+
   Future<void> deleteExpense(Id id) async {
     await isar.writeTxn(() async {
       await isar.expenses.delete(id);
