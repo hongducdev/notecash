@@ -60,12 +60,32 @@ dev_dependencies:
     flutter_test:
         sdk: flutter
 
+    # Icons & Splash
+    flutter_launcher_icons: ^0.13.1
+    flutter_native_splash: ^2.4.0
+
     # Code Generation
     build_runner: ^2.4.9
     isar_generator: ^3.1.0+1
     riverpod_generator: ^2.4.0
 
     flutter_lints: ^6.0.0
+
+flutter_native_splash:
+    color: "#1A1A1A"
+    color_dark: "#1A1A1A"
+    # image: assets/logo.png
+    # image_dark: assets/logo.png
+    android_12:
+        color: "#1A1A1A"
+        color_dark: "#1A1A1A"
+
+flutter_launcher_icons:
+     android: true
+     ios: true
+     image_path: "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+     adaptive_icon_background: "#1A1A1A"
+     adaptive_icon_foreground: "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

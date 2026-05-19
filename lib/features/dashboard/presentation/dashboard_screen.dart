@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:notecash/core/providers.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
+import 'package:notecash/shared/widgets/app_logo.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -23,14 +23,7 @@ class DashboardScreen extends ConsumerWidget {
           slivers: [
             SliverAppBar(
               floating: true,
-              title: Text(
-                'NoteCash',
-                style: GoogleFonts.momoSignature(
-                  fontSize: 28,
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              title: const AppLogo(size: 32),
               actions: [
                 IconButton(
                   onPressed: () => context.push('/settings'),
