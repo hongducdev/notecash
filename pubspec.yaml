@@ -49,7 +49,7 @@ dependencies:
     # UI & Utilities
     dynamic_color: ^1.7.0
     flutter_local_notifications: ^17.2.1
-    flutter_notification_listener: ^1.4.0
+    notification_listener_service: ^0.3.5
     table_calendar: ^3.1.2
     image_picker: ^1.1.2
     google_mlkit_text_recognition: ^0.13.0
@@ -76,19 +76,19 @@ dev_dependencies:
 flutter_native_splash:
     color: "#1A1A1A"
     color_dark: "#1A1A1A"
-    image: assets/icon/image.png
-    image_dark: assets/icon/image.png
+    image: assets/icon/logo.png
+    image_dark: assets/icon/logo.png
     android_12:
         color: "#1A1A1A"
         color_dark: "#1A1A1A"
-        image: assets/icon/image.png
+        image: assets/icon/logo.png
 
 flutter_launcher_icons:
     android: true
     ios: true
-    image_path: "assets/icon/image.png"
+    image_path: "assets/icon/logo.png"
     adaptive_icon_background: "#1A1A1A"
-    adaptive_icon_foreground: "assets/icon/image.png"
+    adaptive_icon_foreground: "assets/icon/logo.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -101,7 +101,7 @@ flutter:
     uses-material-design: true
 
     assets:
-        - assets/icon/image.png
+        - assets/icon/logo.png
 
     # To add assets to your application, add an assets section, like this:
     # assets:

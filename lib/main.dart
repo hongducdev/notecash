@@ -8,6 +8,7 @@ import 'package:notecash/core/theme.dart';
 import 'package:notecash/services/home_widget_service.dart';
 import 'package:notecash/services/notification_recognition_service.dart';
 
+@pragma('vm:entry-point')
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -18,6 +19,7 @@ void main() async {
   final isarService = container.read(isarServiceProvider);
   await isarService.init();
   NotificationRecognitionService.setDatabaseService(isarService);
+  await NotificationRecognitionService.loadTrackedAppsFromDb();
 
   runApp(
     UncontrolledProviderScope(container: container, child: const NoteCashApp()),
@@ -31,12 +33,27 @@ class NoteCashApp extends ConsumerStatefulWidget {
   ConsumerState<NoteCashApp> createState() => _NoteCashAppState();
 }
 
-class _NoteCashAppState extends ConsumerState<NoteCashApp> {
+class _NoteCashAppState extends ConsumerState<NoteCashApp>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _setupHomeWidget();
     _setupNotificationListener();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      NotificationRecognitionService.startListening();
+    }
   }
 
   void _setupHomeWidget() {
@@ -46,7 +63,9 @@ class _NoteCashAppState extends ConsumerState<NoteCashApp> {
   }
 
   void _setupNotificationListener() {
-    NotificationRecognitionService.startListening();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationRecognitionService.startListening();
+    });
   }
 
   void _handleWidgetLaunch(Uri? uri) {

@@ -11,5 +11,14 @@ class UserSettings {
 
   bool isSetupCompleted = false;
 
+  List<String> trackedNotificationApps = [
+    'techcombank',
+    'vietinbank',
+    'timo',
+    'cake',
+    'momo',
+    'zalopay',
+  ];
+
   DateTime? updatedAt;
 }

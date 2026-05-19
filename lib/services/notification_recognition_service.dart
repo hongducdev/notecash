@@ -1,27 +1,49 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_notification_listener/flutter_notification_listener.dart';
+import 'package:notecash/core/models/user_settings.dart';
 import 'package:notecash/core/router.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
-import 'package:notecash/features/notification_log/domain/notification_log.dart';
 import 'package:notecash/services/isar_service.dart';
+import 'package:notification_listener_service/notification_event.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 
+@pragma('vm:entry-point')
 class NotificationRecognitionService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   static IsarService? _isarService;
 
-  static bool _isListening = false;
+  static const MethodChannel _permissionChannel = MethodChannel(
+    'notecash/notification_permission',
+  );
+
+  static final StreamController<ServiceNotificationEvent> _eventController =
+      StreamController<ServiceNotificationEvent>.broadcast();
+  static Stream<ServiceNotificationEvent> get eventStream =>
+      _eventController.stream;
+
+  static StreamSubscription<ServiceNotificationEvent>? _subscription;
+  static bool _permissionRequestedThisSession = false;
+
+  static const Map<String, List<String>> _trackedAppPackages = {
+    'techcombank': ['vn.com.techcombank.bb.app'],
+    'vietinbank': ['com.vietinbank.ipay', 'com.vietinbank.ipaymobile'],
+    'timo': ['com.timoapp', 'com.timo'],
+    'cake': ['vn.cake', 'com.vpbank.cake'],
+    'momo': ['vn.com.momo'],
+    'zalopay': ['com.zing.zalopay'],
+  };
+
+  static Set<String> _trackedAppKeys = _trackedAppPackages.keys.toSet();
 
   static void setDatabaseService(IsarService service) {
     _isarService = service;
   }
 
   static Future<void> init() async {
-    _isListening = false;
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings =
@@ -51,135 +73,89 @@ class NotificationRecognitionService {
         }
       },
     );
-
-    await NotificationsListener.initialize();
-    debugPrint('[NotiService] Initialized');
   }
 
-  static Future<void> startListening() async {
-    bool hasPermission = await NotificationsListener.hasPermission ?? false;
-    debugPrint('[NotiService] hasPermission: $hasPermission');
-    if (hasPermission) {
-      _setupReceivePortListener();
-      bool isRunning = await NotificationsListener.isRunning ?? false;
-      debugPrint('[NotiService] isRunning: $isRunning');
-      if (!isRunning) {
-        final started = await NotificationsListener.startService(
-          title: 'NoteCash',
-          description: 'Đang theo dõi thông báo',
-        );
-        debugPrint('[NotiService] startService result: $started');
-      }
-    }
-  }
+  static void startListening() async {
+    final bool hasPermission =
+        await NotificationListenerService.isPermissionGranted();
 
-  static void _setupReceivePortListener() {
-    if (_isListening) {
-      debugPrint('[NotiService] Already listening, skipping');
-      return;
-    }
-    final port = NotificationsListener.receivePort;
-    if (port == null) {
-      debugPrint('[NotiService] receivePort is null');
-      return;
-    }
-    _isListening = true;
-    debugPrint('[NotiService] Setting up ReceivePort listener');
-    port.listen((event) {
-      debugPrint('[NotiService] Received event: $event');
-      if (event is NotificationEvent) {
-        _handleNotification(event);
+    if (!hasPermission) {
+      if (_permissionRequestedThisSession) {
+        return;
       }
+      _permissionRequestedThisSession = true;
+      await _openNotificationListenerSettings();
+      return;
+    }
+
+    if (_subscription != null) return;
+    _subscription = NotificationListenerService.notificationsStream.listen((
+      event,
+    ) {
+      _eventController.add(event);
+      _handleNotification(event);
     });
   }
 
-  static Future<void> setupListenerAfterPermission() async {
-    _setupReceivePortListener();
-    bool isRunning = await NotificationsListener.isRunning ?? false;
-    debugPrint('[NotiService] setupListenerAfterPermission - isRunning: $isRunning');
-    if (!isRunning) {
-      await NotificationsListener.startService(
-        title: 'NoteCash',
-        description: 'Đang theo dõi thông báo',
-      );
-    }
+  static Future<void> _openNotificationListenerSettings() async {
+    try {
+      await _permissionChannel.invokeMethod('openNotificationListenerSettings');
+    } catch (_) {}
   }
 
-  static void _handleNotification(NotificationEvent event) {
-    final String? title = event.title;
-    final String? content = event.text;
+  static Future<void> updateTrackedApps(Set<String> trackedAppKeys) async {
+    _trackedAppKeys = trackedAppKeys;
+
+    final service = _isarService;
+    if (service == null) return;
+
+    final settings = await service.getUserSettings() ?? UserSettings();
+    settings.trackedNotificationApps = trackedAppKeys.toList();
+    settings.updatedAt = DateTime.now();
+    await service.saveUserSettings(settings);
+  }
+
+  static Future<void> loadTrackedAppsFromDb() async {
+    final service = _isarService;
+    if (service == null) return;
+    final settings = await service.getUserSettings();
+    if (settings == null) return;
+
+    final saved = settings.trackedNotificationApps;
+    if (saved.isEmpty) return;
+    _trackedAppKeys = saved.toSet();
+  }
+
+  static void _handleNotification(ServiceNotificationEvent event) {
+    final String? content = event.content;
     final String? packageName = event.packageName;
 
-    debugPrint('[NotiService] Handling notification from: $packageName');
+    if (content == null) return;
+    if (packageName == null) return;
 
-    bool isBank = false;
-    double? parsedAmount;
-    bool? isIncome;
+    final patterns = _trackedAppKeys
+        .expand((key) => _trackedAppPackages[key] ?? const <String>[])
+        .toList();
 
-    if (content != null) {
-      final bankPackages = [
-        'com.vcb',
-        'com.tpb.mbanking',
-        'vn.com.techcombank.bb.app',
-        'com.mbmobile',
-        'com.vnpay.vcb',
-        'vn.com.momo',
-        'com.zing.zalopay',
-      ];
+    final isTrackedApp = patterns.any(packageName.contains);
+    if (!isTrackedApp) return;
 
-      bool isBankApp = bankPackages.any(
-        (pkg) => packageName?.contains(pkg) ?? false,
-      );
+    // Also check for keywords in title/content if package name is not specific
+    bool containsBankKeywords = content.contains(
+      RegExp(r'TK|số dư|biến động|GD|giao dịch', caseSensitive: false),
+    );
 
-      bool containsBankKeywords = content.contains(
-        RegExp(r'TK|số dư|biến động|GD|giao dịch', caseSensitive: false),
-      );
-
-      isBank = isBankApp || containsBankKeywords;
-      debugPrint('[NotiService] isBank: $isBank (app: $isBankApp, keywords: $containsBankKeywords)');
-
-      if (isBank) {
-        final result = _parseBankAmount(content);
-        parsedAmount = result.amount;
-        isIncome = result.isIncome;
-        debugPrint('[NotiService] Parsed amount: $parsedAmount, isIncome: $isIncome');
-      }
-    }
-
-    unawaited(_saveAndNotify(title, content, packageName, isBank, parsedAmount, isIncome));
-  }
-
-  static Future<void> _saveAndNotify(
-    String? title,
-    String? content,
-    String? packageName,
-    bool isBank,
-    double? parsedAmount,
-    bool? isIncome,
-  ) async {
-    try {
-      final log = NotificationLog()
-        ..title = title
-        ..text = content
-        ..packageName = packageName
-        ..receivedAt = DateTime.now()
-        ..isBankRelated = isBank
-        ..parsedAmount = parsedAmount
-        ..isIncome = isIncome;
-      await _isarService?.saveNotificationLog(log);
-
-      if (isBank && (parsedAmount ?? 0) > 0) {
-        await _showQuickAddNotification(parsedAmount!, isIncome ?? false, content ?? '');
-      }
-    } catch (e) {
-      debugPrint('[NotiService] Error saving notification: $e');
+    if (containsBankKeywords) {
+      _processBankNotification(content);
     }
   }
 
-  static ({double amount, bool isIncome}) _parseBankAmount(String content) {
+  static void _processBankNotification(String content) {
+    // Attempt to parse amount and type from bank notification
     double amount = 0;
     bool isIncome = false;
 
+    // Look for + or - followed by numbers
     final incomeMatch = RegExp(r'\+\s*([0-9,.]+)').firstMatch(content);
     final expenseMatch = RegExp(r'-\s*([0-9,.]+)').firstMatch(content);
 
@@ -190,6 +166,7 @@ class NotificationRecognitionService {
       isIncome = false;
       amount = _parseAmount(expenseMatch.group(1)!);
     } else {
+      // Fallback: search for any large number that could be an amount
       final amountMatch = RegExp(
         r'([0-9]{1,3}([,.][0-9]{3})+)',
       ).firstMatch(content);
@@ -198,7 +175,9 @@ class NotificationRecognitionService {
       }
     }
 
-    return (amount: amount, isIncome: isIncome);
+    if (amount > 0) {
+      _showQuickAddNotification(amount, isIncome, content);
+    }
   }
 
   static double _parseAmount(String str) {

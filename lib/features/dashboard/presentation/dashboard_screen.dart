@@ -25,25 +25,6 @@ class DashboardScreen extends ConsumerWidget {
               floating: true,
               title: const AppLogo(size: 32),
               actions: [
-                Consumer(
-                  builder: (context, ref, _) {
-                    final unreadAsync = ref.watch(
-                      unreadNotificationLogsProvider,
-                    );
-                    final unreadCount = unreadAsync.asData?.value.length ?? 0;
-                    return Badge(
-                      isLabelVisible: unreadCount > 0,
-                      label: Text(
-                        unreadCount > 99 ? '99+' : '$unreadCount',
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                      child: IconButton(
-                        onPressed: () => context.push('/notification-log'),
-                        icon: const Icon(Icons.notifications_outlined),
-                      ),
-                    );
-                  },
-                ),
                 IconButton(
                   onPressed: () => context.push('/settings'),
                   icon: const Icon(Icons.settings_outlined),

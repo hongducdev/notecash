@@ -54,13 +54,11 @@
                 android:resource="@xml/notecash_widget_info" />
         </receiver>
 
-        <service android:name="im.zoe.labs.flutter_notification_listener.NotificationsHandlerService"
+        <service
+            android:name="notification.listener.service.NotificationListener"
             android:label="NoteCash Notification Listener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="true"
-            android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="notification_listener"/>
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
