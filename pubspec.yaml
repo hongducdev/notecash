@@ -58,6 +58,11 @@ dependencies:
     google_fonts: ^8.1.0
     cupertino_icons: ^1.0.8
 
+    # Backup & Import/Export
+    xml: ^6.5.0
+    share_plus: ^9.0.0
+    file_picker: ^8.0.0
+
 dev_dependencies:
     flutter_test:
         sdk: flutter

@@ -30,6 +30,21 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
   ExpenseCategory _singleCategoryDraft = ExpenseCategory.other;
   double _singleTotalDraft = 0;
 
+  void _addItemDraft() {
+    setState(() {
+      _itemDrafts = [
+        ..._itemDrafts,
+        _ReceiptItemDraft(
+          name: '',
+          amount: 0,
+          category: ExpenseCategory.other,
+          confidence: 0,
+        ),
+      ];
+      _saveMode = _ReceiptSaveMode.multiple;
+    });
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(
       source: source,
@@ -63,9 +78,7 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
                 ),
               )
               .toList();
-          _saveMode = _itemDrafts.length >= 2
-              ? _ReceiptSaveMode.multiple
-              : _ReceiptSaveMode.single;
+          _saveMode = _ReceiptSaveMode.single;
           _isScanning = false;
         });
       } catch (e) {
@@ -260,9 +273,10 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
 
   Widget _buildResultCard(ColorScheme colorScheme) {
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-    final scan = _scanResult;
     final items = _itemDrafts.where((e) => !e.deleted).toList(growable: false);
     final itemsSum = items.fold<double>(0, (acc, e) => acc + e.amount);
+    final totalGap = _singleTotalDraft - itemsSum;
+    final hasGap = totalGap.abs() >= 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,15 +329,6 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
                         onSelectionChanged: (s) {
                           setState(() {
                             _saveMode = s.first;
-                            if (_saveMode == _ReceiptSaveMode.single) {
-                              if (_singleTotalDraft <= 0 && scan != null) {
-                                _singleTotalDraft = scan.total;
-                              }
-                              if (_merchantDraft.trim().isEmpty &&
-                                  scan != null) {
-                                _merchantDraft = scan.merchant;
-                              }
-                            }
                           });
                         },
                       ),
@@ -349,24 +354,24 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
                       setState(() => _paymentMethodSelection = s.first),
                 ),
                 const SizedBox(height: 12),
+                _buildEditableRow(
+                  'Cửa hàng',
+                  _merchantDraft,
+                  (val) => _merchantDraft = val,
+                  colorScheme,
+                ),
+                Divider(color: colorScheme.outlineVariant),
+                _buildEditableRow(
+                  'Tổng cộng',
+                  currencyFormat.format(_singleTotalDraft),
+                  (val) {
+                    final cleanVal = val.replaceAll(RegExp(r'[^0-9]'), '');
+                    _singleTotalDraft = double.tryParse(cleanVal) ?? 0;
+                  },
+                  colorScheme,
+                  keyboardType: TextInputType.number,
+                ),
                 if (_saveMode == _ReceiptSaveMode.single) ...[
-                  _buildEditableRow(
-                    'Cửa hàng',
-                    _merchantDraft,
-                    (val) => _merchantDraft = val,
-                    colorScheme,
-                  ),
-                  Divider(color: colorScheme.outlineVariant),
-                  _buildEditableRow(
-                    'Tổng tiền',
-                    currencyFormat.format(_singleTotalDraft),
-                    (val) {
-                      final cleanVal = val.replaceAll(RegExp(r'[^0-9]'), '');
-                      _singleTotalDraft = double.tryParse(cleanVal) ?? 0;
-                    },
-                    colorScheme,
-                    keyboardType: TextInputType.number,
-                  ),
                   Divider(color: colorScheme.outlineVariant),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -397,9 +402,19 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
                     ),
                   ),
                 ] else ...[
+                  Divider(color: colorScheme.outlineVariant),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: _addItemDraft,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Thêm sản phẩm'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   if (items.isEmpty)
                     Text(
-                      'Không tìm thấy item rõ ràng. Chuyển qua “1 khoản” để lưu tổng tiền.',
+                      'Chưa có sản phẩm. Hãy bấm “Thêm sản phẩm” để nhập thủ công.',
                       style: TextStyle(color: colorScheme.onSurfaceVariant),
                     )
                   else
@@ -420,7 +435,7 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
                         Divider(color: colorScheme.outlineVariant),
                         ListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: const Text('Tổng'),
+                          title: const Text('Tổng sản phẩm'),
                           trailing: Text(
                             currencyFormat.format(itemsSum),
                             style: TextStyle(
@@ -429,6 +444,25 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
                             ),
                           ),
                         ),
+                        if (hasGap)
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              'Chênh lệch so với tổng cộng',
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            trailing: Text(
+                              currencyFormat.format(totalGap),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: totalGap.abs() >= 1
+                                    ? colorScheme.tertiary
+                                    : colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                 ],

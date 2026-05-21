@@ -284,14 +284,56 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ]),
           _buildSection('Dữ liệu', [
             _buildTile(
-              Icons.cloud_upload_outlined,
-              'Sao lưu đám mây',
-              trailing: const Text('V2'),
+              Icons.upload_file,
+              'Xuất dữ liệu',
+              subtitle: 'Sao lưu dữ liệu ra file XML',
+              onTap: () async {
+                final backupService = ref.read(backupServiceProvider);
+                try {
+                  await backupService.exportToFile();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đã xuất file XML thành công')),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Lỗi xuất dữ liệu: $e')),
+                    );
+                  }
+                }
+              },
             ),
             _buildTile(
-              Icons.file_download_outlined,
-              'Xuất Excel',
-              trailing: const Text('V2'),
+              Icons.download,
+              'Nhập dữ liệu',
+              subtitle: 'Khôi phục dữ liệu từ file XML',
+              onTap: () async {
+                final backupService = ref.read(backupServiceProvider);
+                try {
+                  final count = await backupService.importFromFile();
+                  if (context.mounted) {
+                    if (count > 0) {
+                      ref.invalidate(allExpensesProvider);
+                      ref.invalidate(userSettingsProvider);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Đã nhập $count giao dịch thành công')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Không có dữ liệu mới để nhập')),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Lỗi nhập dữ liệu: $e')),
+                    );
+                  }
+                }
+              },
             ),
           ]),
           _buildSection('Thông tin', [
@@ -315,10 +357,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Colors.white54,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               letterSpacing: 1.2,
             ),
           ),
@@ -349,7 +391,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: const TextStyle(fontSize: 12, color: Colors.white38),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
             )
           : null,
       trailing: trailing,

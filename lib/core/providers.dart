@@ -1,10 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notecash/core/models/user_settings.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
+import 'package:notecash/services/backup_service.dart';
 import 'package:notecash/services/isar_service.dart';
 
 final isarServiceProvider = Provider<IsarService>((ref) {
   return IsarService();
+});
+
+final backupServiceProvider = Provider<BackupService>((ref) {
+  return BackupService(ref.watch(isarServiceProvider));
 });
 
 final userSettingsProvider = FutureProvider<UserSettings?>((ref) async {
