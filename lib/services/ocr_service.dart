@@ -489,13 +489,7 @@ class OcrService {
     r'thành\s*tiền|thanh\s*tien|'
     r'khách\s*trả|khach\s*tra|'
     r'khách\s*phải\s*trả|khach\s*phai\s*tra|'
-    r'phải\s*trả|phai\s*tra|'
-    r'tiền\s*thừa|tien\s*thua|'
-    r'tiền\s*trả\s*lại|tien\s*tra\s*lai|'
-    r'tiền\s*mặt|tien\s*mat|'
-    r'điểm\s*tích\s*lũy|diem\s*tich\s*luy|'
-    r'chiết\s*khấu|chiet\s*khau|'
-    r'giảm\s*giá|giam\s*gia'
+    r'phải\s*trả|phai\s*tra'
     r')\b',
     caseSensitive: false,
   );
@@ -521,11 +515,18 @@ class OcrService {
     r'\bthanh\s*tien\b|'
     r'\bkhách\s*trả\b|'
     r'\bkhach\s*tra\b|'
+    r'\bkhách\s*phải\s*trả\b|'
+    r'\bkhach\s*phai\s*tra\b|'
     r'\btiền\s*khách\b|'
     r'\btien\s*khach\b|'
+    r'\btiền\s*khách\s*trả\b|'
+    r'\btien\s*khach\s*tra\b|'
     r'\bsố\s*tiền\s*thanh\s*toán\b|'
     r'\bso\s*tien\s*thanh\s*toan\b|'
-    r'\btổng\b(?=\s*[:]?\s*[0-9])'
+    r'\bcần\s*thanh\s*toán\b|'
+    r'\bcan\s*thanh\s*toan\b|'
+    r'\btổng\b(?=\s*[:]?\s*[0-9])|'
+    r'\btong\b(?=\s*[:]?\s*[0-9])'
     r')',
     caseSensitive: false,
   );
@@ -592,6 +593,7 @@ class OcrService {
       if (_looksLikeNoise(nameLine)) continue;
       if (!_containsLetters(nameLine)) continue;
       if (_totalHintRegex.hasMatch(nameLower)) continue;
+      if (_notTotalLineRegex.hasMatch(nameLower)) continue;
       if (_ignoreLineRegex.hasMatch(nameLower)) continue;
       // Reject lines that are themselves price rows (no letter-dominant content)
       if (_isPriceRowLine(nameLine) && !_containsLetters(nameLine)) continue;
@@ -623,6 +625,7 @@ class OcrService {
 
         if (!_isPriceRowLine(candidate)) continue;
         if (_totalHintRegex.hasMatch(candidateLower)) continue;
+        if (_notTotalLineRegex.hasMatch(candidateLower)) continue;
         if (_ignoreLineRegex.hasMatch(candidateLower)) continue;
 
         priceRowIdx = idx;
@@ -681,6 +684,7 @@ class OcrService {
 
       if (_ignoreLineRegex.hasMatch(lower)) continue;
       if (_totalHintRegex.hasMatch(lower)) continue;
+      if (_notTotalLineRegex.hasMatch(lower)) continue;
       if (_looksLikeNoise(line)) continue;
       // Pure price rows with no letters → skip (handled by multi-line pass)
       if (_isPriceRowLine(line) && !_containsLetters(line)) continue;
@@ -765,6 +769,7 @@ class OcrService {
     String lineLower,
   ) {
     if (_totalHintRegex.hasMatch(lineLower)) return null;
+    if (_notTotalLineRegex.hasMatch(lineLower)) return null;
     if (_ignoreLineRegex.hasMatch(lineLower)) return null;
 
     // Find the rightmost plausible price token (right-to-left scan).
@@ -882,6 +887,67 @@ class OcrService {
 
   // ─── Total Extraction ─────────────────────────────────────────────────────
 
+  // ── Regex to identify lines that are NOT the real total ──────────────────
+  // These are "customer paid" / "change" / "discount" / "loyalty" lines.
+  // They appear near the total but should NOT be selected as the total.
+  static final RegExp _notTotalLineRegex = RegExp(
+    r'(?:'
+    r'\btiền\s*thừa\b|'
+    r'\btien\s*thua\b|'
+    r'\btiền\s*trả\s*lại\b|'
+    r'\btien\s*tra\s*lai\b|'
+    r'\btiền\s*mặt\b|'
+    r'\btien\s*mat\b|'
+    r'\btiền\s*khách\s*đưa\b|'
+    r'\btien\s*khach\s*dua\b|'
+    r'\bkhách\s*đưa\b|'
+    r'\bkhach\s*dua\b|'
+    r'\bchiết\s*khấu\b|'
+    r'\bchiet\s*khau\b|'
+    r'\bgiảm\s*giá\b|'
+    r'\bgiam\s*gia\b|'
+    r'\bdiscount\b|'
+    r'\bchange\b|'
+    r'\bcash\s*received\b|'
+    r'\bcash\s*tendered\b|'
+    r'\bđiểm\s*tích\s*lũy\b|'
+    r'\bdiem\s*tich\s*luy\b|'
+    r'\bđiểm\s*thưởng\b|'
+    r'\bdiem\s*thuong\b|'
+    r'\bsaving\b|'
+    r'\bvat\b|'
+    r'\bthuế\b|'
+    r'\bthue\b|'
+    r'\btax\b'
+    r')',
+    caseSensitive: false,
+  );
+
+  // ── Regex for the "best" total keywords — highest confidence ────────────
+  // "Tổng cộng", "Tổng tiền", "Tổng thanh toán", "Thành tiền" are the
+  // canonical total labels on Vietnamese invoices.
+  static final RegExp _primaryTotalRegex = RegExp(
+    r'(?:'
+    r'\btổng\s*cộng\b|'
+    r'\btong\s*cong\b|'
+    r'\btongcong\b|'
+    r'\btổng\s*tiền\b|'
+    r'\btong\s*tien\b|'
+    r'\btổng\s*thanh\s*toán\b|'
+    r'\btong\s*thanh\s*toan\b|'
+    r'\btổng\s*số\s*tiền\b|'
+    r'\btong\s*so\s*tien\b|'
+    r'\bthành\s*tiền\b|'
+    r'\bthanh\s*tien\b|'
+    r'\bgrand\s*total\b|'
+    r'\btotal\s*amount\b|'
+    r'\bamount\s*due\b|'
+    r'\bcần\s*thanh\s*toán\b|'
+    r'\bcan\s*thanh\s*toan\b'
+    r')',
+    caseSensitive: false,
+  );
+
   double _extractTotal(
     List<String> lines,
     List<ReceiptItem> items,
@@ -896,8 +962,22 @@ class OcrService {
 
       if (!_strongTotalHintRegex.hasMatch(lower)) continue;
 
+      // ── Skip lines that are NOT the real total ─────────────────────────
+      // "Tiền mặt", "Tiền thừa", "Chiết khấu", etc. should never win.
+      if (_notTotalLineRegex.hasMatch(lower)) continue;
+
       final scoreBase = _scoreLinePosition(i, lines.length, ocrLines);
-      const hintScore = 6.0;
+
+      // ── Tiered hint scoring ────────────────────────────────────────────
+      // Primary keywords ("Tổng cộng") get a big bonus over secondary
+      // keywords ("Thanh toán", "Khách trả") so the real total wins even
+      // when the customer-payment line appears lower on the receipt.
+      final double hintScore;
+      if (_primaryTotalRegex.hasMatch(lower)) {
+        hintScore = 12.0; // strong signal — this IS the total line
+      } else {
+        hintScore = 6.0; // secondary signal
+      }
 
       // Use rightmost element in the row as the total candidate
       final rowElements = i < ocrLines.length
@@ -933,7 +1013,8 @@ class OcrService {
       // Fallback: use classical regex token extraction
       bestToken ??= _pickBestAmountToken(_extractAmountTokens(line), lower);
 
-      // If still nothing on this line, look at the next line
+      // If still nothing on this line, look at the next line (amount on
+      // a separate row directly below the label)
       if (bestToken == null && i + 1 < lines.length) {
         final nextLine = lines[i + 1];
         final nextLower = nextLine.toLowerCase();
@@ -964,6 +1045,7 @@ class OcrService {
       }
     }
 
+    // ── Sort: highest score wins; on tie, prefer the LARGEST amount ──────
     candidates.sort((a, b) {
       final s = b.score.compareTo(a.score);
       if (s != 0) return s;
