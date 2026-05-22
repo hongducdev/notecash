@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:notecash/core/providers.dart';
 import 'package:notecash/services/notification_recognition_service.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
@@ -25,10 +26,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Set<String> _trackedPackageNames = {};
   bool _loadedTrackedApps = false;
 
+  bool _hasPin = false;
+  bool _biometricEnabled = false;
+  bool _canUseBiometric = false;
+
   @override
   void initState() {
     super.initState();
     _loadTrackedApps();
+    _loadSecurityState();
+  }
+
+  Future<void> _loadSecurityState() async {
+    final securityService = ref.read(securityServiceProvider);
+    final hasPin = await securityService.hasPin();
+    final biometricEnabled = await securityService.isBiometricEnabled();
+    final canUse = await securityService.canUseBiometric();
+    if (mounted) {
+      setState(() {
+        _hasPin = hasPin;
+        _biometricEnabled = biometricEnabled;
+        _canUseBiometric = canUse;
+      });
+    }
   }
 
   Future<void> _loadTrackedApps() async {
@@ -233,6 +253,114 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  void _showChangePinDialog() {
+    final pinController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Nhập mã PIN hiện tại'),
+        content: TextField(
+          controller: pinController,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Nhập 6 số',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final securityService = ref.read(securityServiceProvider);
+              final isValid =
+                  await securityService.verifyPin(pinController.text);
+              if (isValid) {
+                if (context.mounted) Navigator.of(context).pop();
+                if (mounted) {
+                  await this.context.push('/pin-setup');
+                  _loadSecurityState();
+                }
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Mã PIN không chính xác')),
+                  );
+                }
+              }
+            },
+            child: const Text('Xác nhận'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRemovePinDialog() {
+    final pinController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xóa mã PIN'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Nhập mã PIN hiện tại để xóa bảo mật'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: pinController,
+              obscureText: true,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'Nhập 6 số',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () async {
+              final securityService = ref.read(securityServiceProvider);
+              final isValid =
+                  await securityService.verifyPin(pinController.text);
+              if (isValid) {
+                await securityService.removePin();
+                await ref.read(appLockControllerProvider).refresh();
+                if (context.mounted) Navigator.of(context).pop();
+                _loadSecurityState();
+                if (mounted) {
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(content: Text('Đã xóa mã PIN')),
+                  );
+                }
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Mã PIN không chính xác')),
+                  );
+                }
+              }
+            },
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -281,6 +409,57 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Chế độ tối',
               trailing: const Text('Luôn bật'),
             ),
+          ]),
+          _buildSection('Bảo mật', [
+            _buildTile(
+              _hasPin ? Icons.lock_outlined : Icons.lock_open_outlined,
+              _hasPin ? 'Đổi mã PIN' : 'Đặt mã PIN',
+              subtitle: _hasPin
+                  ? 'Thay đổi mã PIN hiện tại'
+                  : 'Thiết lập mã PIN để bảo vệ ứng dụng',
+              onTap: () async {
+                if (_hasPin) {
+                  _showChangePinDialog();
+                } else {
+                  await context.push('/pin-setup');
+                  _loadSecurityState();
+                }
+              },
+            ),
+            if (_hasPin && _canUseBiometric)
+              _buildTile(
+                Icons.fingerprint,
+                'Mở khóa sinh trắc học',
+                subtitle: 'Sử dụng vân tay hoặc khuôn mặt để mở khóa',
+                trailing: Switch(
+                  value: _biometricEnabled,
+                  onChanged: (value) async {
+                    final securityService = ref.read(securityServiceProvider);
+                    if (value) {
+                      final authenticated =
+                          await securityService.authenticateWithBiometric();
+                      if (authenticated) {
+                        await securityService.setBiometricEnabled(true);
+                        setState(() {
+                          _biometricEnabled = true;
+                        });
+                      }
+                    } else {
+                      await securityService.setBiometricEnabled(false);
+                      setState(() {
+                        _biometricEnabled = false;
+                      });
+                    }
+                  },
+                ),
+              ),
+            if (_hasPin)
+              _buildTile(
+                Icons.lock_reset_outlined,
+                'Xóa mã PIN',
+                subtitle: 'Tắt bảo vệ ứng dụng',
+                onTap: _showRemovePinDialog,
+              ),
           ]),
           _buildSection('Dữ liệu', [
             _buildTile(

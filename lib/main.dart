@@ -4,9 +4,11 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:notecash/core/app_lock_controller.dart';
 import 'package:notecash/core/providers.dart';
 import 'package:notecash/core/router.dart';
 import 'package:notecash/core/theme.dart';
+import 'package:notecash/features/settings/presentation/lock_screen.dart';
 import 'package:notecash/services/home_widget_service.dart';
 import 'package:notecash/services/bill_reminder_service.dart';
 import 'package:notecash/services/notification_recognition_service.dart';
@@ -24,6 +26,9 @@ void main() async {
   await isarService.init();
   NotificationRecognitionService.setDatabaseService(isarService);
   await NotificationRecognitionService.loadTrackedAppsFromDb();
+
+  final appLockController = container.read(appLockControllerProvider);
+  await appLockController.init();
 
   runApp(
     UncontrolledProviderScope(container: container, child: const NoteCashApp()),
@@ -61,6 +66,9 @@ class _NoteCashAppState extends ConsumerState<NoteCashApp>
     if (state == AppLifecycleState.resumed) {
       unawaited(NotificationRecognitionService.startListening());
     }
+    if (state == AppLifecycleState.paused) {
+      ref.read(appLockControllerProvider).lockIfNeeded();
+    }
   }
 
   void _setupHomeWidget() {
@@ -87,9 +95,10 @@ class _NoteCashAppState extends ConsumerState<NoteCashApp>
 
   @override
   Widget build(BuildContext context) {
+    final appLock = ref.watch(appLockControllerProvider);
+
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        // Fallback schemes if dynamic color is not available
         final lightScheme =
             lightDynamic ??
             ColorScheme.fromSeed(
@@ -103,13 +112,24 @@ class _NoteCashAppState extends ConsumerState<NoteCashApp>
               brightness: Brightness.dark,
             );
 
-        return MaterialApp.router(
-          title: 'NoteCash',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.theme(lightScheme),
-          darkTheme: AppTheme.theme(darkScheme),
-          themeMode: ThemeMode.system,
-          routerConfig: router,
+        return ListenableBuilder(
+          listenable: appLock,
+          builder: (context, _) {
+            return MaterialApp.router(
+              title: 'NoteCash',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.theme(lightScheme),
+              darkTheme: AppTheme.theme(darkScheme),
+              themeMode: ThemeMode.system,
+              routerConfig: router,
+              builder: (context, child) {
+                if (appLock.isLocked) {
+                  return const LockScreen();
+                }
+                return child ?? const SizedBox.shrink();
+              },
+            );
+          },
         );
       },
     );

@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notecash/core/app_lock_controller.dart';
 import 'package:notecash/core/models/user_settings.dart';
 import 'package:notecash/features/bills/domain/recurring_bill.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
 import 'package:notecash/services/backup_service.dart';
 import 'package:notecash/services/isar_service.dart';
+import 'package:notecash/services/security_service.dart';
 
 final isarServiceProvider = Provider<IsarService>((ref) {
   return IsarService();
@@ -11,6 +13,14 @@ final isarServiceProvider = Provider<IsarService>((ref) {
 
 final backupServiceProvider = Provider<BackupService>((ref) {
   return BackupService(ref.watch(isarServiceProvider));
+});
+
+final securityServiceProvider = Provider<SecurityService>((ref) {
+  return SecurityService(ref.watch(isarServiceProvider));
+});
+
+final appLockControllerProvider = Provider<AppLockController>((ref) {
+  return AppLockController(ref.watch(securityServiceProvider));
 });
 
 final userSettingsProvider = FutureProvider<UserSettings?>((ref) async {

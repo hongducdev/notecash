@@ -15,5 +15,9 @@ class UserSettings {
 
   List<String> trackedNotificationPackages = [];
 
+  String? pinHash;
+
+  bool isBiometricEnabled = false;
+
   DateTime? updatedAt;
 }

@@ -117,7 +117,7 @@ class _BillInputScreenState extends ConsumerState<BillInputScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<BillFrequency>(
-                value: _frequency,
+                initialValue: _frequency,
                 decoration: const InputDecoration(labelText: 'Tần suất'),
                 items: BillFrequency.values.map((f) {
                   return DropdownMenuItem(
@@ -141,7 +141,7 @@ class _BillInputScreenState extends ConsumerState<BillInputScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ExpenseCategory>(
-                value: _category,
+                initialValue: _category,
                 decoration: const InputDecoration(labelText: 'Danh mục'),
                 items: ExpenseCategory.values
                     .where((c) => c != ExpenseCategory.income)
@@ -156,7 +156,7 @@ class _BillInputScreenState extends ConsumerState<BillInputScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<PaymentMethod>(
-                value: _paymentMethod,
+                initialValue: _paymentMethod,
                 decoration: const InputDecoration(
                   labelText: 'Phương thức thanh toán',
                 ),

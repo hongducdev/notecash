@@ -31,7 +31,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
           }
           return ListView.separated(
             itemCount: bills.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final bill = bills[index];
               final dueStr = bill.daysUntilDue == 0

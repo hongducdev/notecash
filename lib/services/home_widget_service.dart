@@ -42,7 +42,7 @@ class HomeWidgetService {
       symbol: '',
       decimalDigits: 0,
     ).format(next.amount);
-    final display = '${next.name}: ${amountStr}đ $dueStr';
+    final display = '${next.name}: $amountStrđ $dueStr';
     await HomeWidget.saveWidgetData<String>('upcoming_bill', display);
     await HomeWidget.updateWidget(
       name: _androidWidgetName,

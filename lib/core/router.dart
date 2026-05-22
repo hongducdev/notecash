@@ -9,11 +9,21 @@ import 'package:notecash/features/expense/presentation/receipt_scanner_screen.da
 import 'package:notecash/features/settings/presentation/settings_screen.dart';
 import 'package:notecash/features/settings/presentation/notification_permission_screen.dart';
 import 'package:notecash/features/settings/presentation/setup_balance_screen.dart';
+import 'package:notecash/features/settings/presentation/lock_screen.dart';
+import 'package:notecash/features/settings/presentation/pin_setup_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (context, state) => const MainScreen()),
+    GoRoute(
+      path: '/lock',
+      builder: (context, state) => const LockScreen(),
+    ),
+    GoRoute(
+      path: '/pin-setup',
+      builder: (context, state) => const PinSetupScreen(),
+    ),
     GoRoute(
       path: '/notification-permission',
       builder: (context, state) => const NotificationPermissionScreen(),

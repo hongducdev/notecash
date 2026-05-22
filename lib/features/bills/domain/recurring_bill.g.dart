@@ -17,7 +17,11 @@ const RecurringBillSchema = CollectionSchema(
   name: r'RecurringBill',
   id: 4191036981950318912,
   properties: {
-    r'amount': PropertySchema(id: 0, name: r'amount', type: IsarType.double),
+    r'amount': PropertySchema(
+      id: 0,
+      name: r'amount',
+      type: IsarType.double,
+    ),
     r'category': PropertySchema(
       id: 1,
       name: r'category',
@@ -40,7 +44,11 @@ const RecurringBillSchema = CollectionSchema(
       type: IsarType.byte,
       enumMap: _RecurringBillfrequencyEnumValueMap,
     ),
-    r'isActive': PropertySchema(id: 5, name: r'isActive', type: IsarType.bool),
+    r'isActive': PropertySchema(
+      id: 5,
+      name: r'isActive',
+      type: IsarType.bool,
+    ),
     r'isDueSoon': PropertySchema(
       id: 6,
       name: r'isDueSoon',
@@ -56,7 +64,11 @@ const RecurringBillSchema = CollectionSchema(
       name: r'lastPaidDate',
       type: IsarType.dateTime,
     ),
-    r'name': PropertySchema(id: 9, name: r'name', type: IsarType.string),
+    r'name': PropertySchema(
+      id: 9,
+      name: r'name',
+      type: IsarType.string,
+    ),
     r'nextDueDate': PropertySchema(
       id: 10,
       name: r'nextDueDate',
@@ -72,7 +84,7 @@ const RecurringBillSchema = CollectionSchema(
       id: 12,
       name: r'reminderDaysBefore',
       type: IsarType.long,
-    ),
+    )
   },
   estimateSize: _recurringBillEstimateSize,
   serialize: _recurringBillSerialize,
@@ -129,20 +141,18 @@ RecurringBill _recurringBillDeserialize(
   object.amount = reader.readDouble(offsets[0]);
   object.category =
       _RecurringBillcategoryValueEnumMap[reader.readByteOrNull(offsets[1])] ??
-      ExpenseCategory.foodAndDrink;
+          ExpenseCategory.foodAndDrink;
   object.createdAt = reader.readDateTimeOrNull(offsets[2]);
   object.frequency =
       _RecurringBillfrequencyValueEnumMap[reader.readByteOrNull(offsets[4])] ??
-      BillFrequency.monthly;
+          BillFrequency.monthly;
   object.id = id;
   object.isActive = reader.readBool(offsets[5]);
   object.lastPaidDate = reader.readDateTimeOrNull(offsets[8]);
   object.name = reader.readString(offsets[9]);
   object.nextDueDate = reader.readDateTime(offsets[10]);
-  object.paymentMethod =
-      _RecurringBillpaymentMethodValueEnumMap[reader.readByteOrNull(
-        offsets[11],
-      )] ??
+  object.paymentMethod = _RecurringBillpaymentMethodValueEnumMap[
+          reader.readByteOrNull(offsets[11])] ??
       PaymentMethod.cash;
   object.reminderDaysBefore = reader.readLong(offsets[12]);
   return object;
@@ -158,21 +168,17 @@ P _recurringBillDeserializeProp<P>(
     case 0:
       return (reader.readDouble(offset)) as P;
     case 1:
-      return (_RecurringBillcategoryValueEnumMap[reader.readByteOrNull(
-                offset,
-              )] ??
-              ExpenseCategory.foodAndDrink)
-          as P;
+      return (_RecurringBillcategoryValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          ExpenseCategory.foodAndDrink) as P;
     case 2:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
       return (reader.readLong(offset)) as P;
     case 4:
-      return (_RecurringBillfrequencyValueEnumMap[reader.readByteOrNull(
-                offset,
-              )] ??
-              BillFrequency.monthly)
-          as P;
+      return (_RecurringBillfrequencyValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          BillFrequency.monthly) as P;
     case 5:
       return (reader.readBool(offset)) as P;
     case 6:
@@ -186,11 +192,9 @@ P _recurringBillDeserializeProp<P>(
     case 10:
       return (reader.readDateTime(offset)) as P;
     case 11:
-      return (_RecurringBillpaymentMethodValueEnumMap[reader.readByteOrNull(
-                offset,
-              )] ??
-              PaymentMethod.cash)
-          as P;
+      return (_RecurringBillpaymentMethodValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          PaymentMethod.cash) as P;
     case 12:
       return (reader.readLong(offset)) as P;
     default:
@@ -226,7 +230,10 @@ const _RecurringBillfrequencyValueEnumMap = {
   1: BillFrequency.quarterly,
   2: BillFrequency.annual,
 };
-const _RecurringBillpaymentMethodEnumValueMap = {'cash': 0, 'bank': 1};
+const _RecurringBillpaymentMethodEnumValueMap = {
+  'cash': 0,
+  'bank': 1,
+};
 const _RecurringBillpaymentMethodValueEnumMap = {
   0: PaymentMethod.cash,
   1: PaymentMethod.bank,
@@ -241,10 +248,7 @@ List<IsarLinkBase<dynamic>> _recurringBillGetLinks(RecurringBill object) {
 }
 
 void _recurringBillAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  RecurringBill object,
-) {
+    IsarCollection<dynamic> col, Id id, RecurringBill object) {
   object.id = id;
 }
 
@@ -260,16 +264,17 @@ extension RecurringBillQueryWhereSort
 extension RecurringBillQueryWhere
     on QueryBuilder<RecurringBill, RecurringBill, QWhereClause> {
   QueryBuilder<RecurringBill, RecurringBill, QAfterWhereClause> idEqualTo(
-    Id id,
-  ) {
+      Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterWhereClause> idNotEqualTo(
-    Id id,
-  ) {
+      Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -292,9 +297,8 @@ extension RecurringBillQueryWhere
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterWhereClause> idGreaterThan(
-    Id id, {
-    bool include = false,
-  }) {
+      Id id,
+      {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -303,9 +307,8 @@ extension RecurringBillQueryWhere
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterWhereClause> idLessThan(
-    Id id, {
-    bool include = false,
-  }) {
+      Id id,
+      {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -320,14 +323,12 @@ extension RecurringBillQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -335,56 +336,53 @@ extension RecurringBillQueryWhere
 extension RecurringBillQueryFilter
     on QueryBuilder<RecurringBill, RecurringBill, QFilterCondition> {
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  amountEqualTo(double value, {double epsilon = Query.epsilon}) {
+      amountEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'amount',
-          value: value,
-          epsilon: epsilon,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'amount',
+        value: value,
+        epsilon: epsilon,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  amountGreaterThan(
+      amountGreaterThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'amount',
-          value: value,
-          epsilon: epsilon,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'amount',
+        value: value,
+        epsilon: epsilon,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  amountLessThan(
+      amountLessThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'amount',
-          value: value,
-          epsilon: epsilon,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'amount',
+        value: value,
+        epsilon: epsilon,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  amountBetween(
+      amountBetween(
     double lower,
     double upper, {
     bool includeLower = true,
@@ -392,277 +390,280 @@ extension RecurringBillQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'amount',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          epsilon: epsilon,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'amount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  categoryEqualTo(ExpenseCategory value) {
+      categoryEqualTo(ExpenseCategory value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'category', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  categoryGreaterThan(ExpenseCategory value, {bool include = false}) {
+      categoryGreaterThan(
+    ExpenseCategory value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'category',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'category',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  categoryLessThan(ExpenseCategory value, {bool include = false}) {
+      categoryLessThan(
+    ExpenseCategory value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'category',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'category',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  categoryBetween(
+      categoryBetween(
     ExpenseCategory lower,
     ExpenseCategory upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'category',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'category',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  createdAtIsNull() {
+      createdAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'createdAt'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'createdAt',
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  createdAtIsNotNull() {
+      createdAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'createdAt'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'createdAt',
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  createdAtEqualTo(DateTime? value) {
+      createdAtEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'createdAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  createdAtGreaterThan(DateTime? value, {bool include = false}) {
+      createdAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  createdAtLessThan(DateTime? value, {bool include = false}) {
+      createdAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  createdAtBetween(
+      createdAtBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'createdAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'createdAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  daysUntilDueEqualTo(int value) {
+      daysUntilDueEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'daysUntilDue', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'daysUntilDue',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  daysUntilDueGreaterThan(int value, {bool include = false}) {
+      daysUntilDueGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'daysUntilDue',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'daysUntilDue',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  daysUntilDueLessThan(int value, {bool include = false}) {
+      daysUntilDueLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'daysUntilDue',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'daysUntilDue',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  daysUntilDueBetween(
+      daysUntilDueBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'daysUntilDue',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'daysUntilDue',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  frequencyEqualTo(BillFrequency value) {
+      frequencyEqualTo(BillFrequency value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'frequency', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'frequency',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  frequencyGreaterThan(BillFrequency value, {bool include = false}) {
+      frequencyGreaterThan(
+    BillFrequency value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'frequency',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'frequency',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  frequencyLessThan(BillFrequency value, {bool include = false}) {
+      frequencyLessThan(
+    BillFrequency value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'frequency',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'frequency',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  frequencyBetween(
+      frequencyBetween(
     BillFrequency lower,
     BillFrequency upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'frequency',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'frequency',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition> idEqualTo(
-    Id value,
-  ) {
+      Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  idGreaterThan(Id value, {bool include = false}) {
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
@@ -671,13 +672,11 @@ extension RecurringBillQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
@@ -688,115 +687,117 @@ extension RecurringBillQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  isActiveEqualTo(bool value) {
+      isActiveEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'isActive', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isActive',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  isDueSoonEqualTo(bool value) {
+      isDueSoonEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'isDueSoon', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isDueSoon',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  isOverdueEqualTo(bool value) {
+      isOverdueEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'isOverdue', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isOverdue',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  lastPaidDateIsNull() {
+      lastPaidDateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'lastPaidDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastPaidDate',
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  lastPaidDateIsNotNull() {
+      lastPaidDateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'lastPaidDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastPaidDate',
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  lastPaidDateEqualTo(DateTime? value) {
+      lastPaidDateEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'lastPaidDate', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastPaidDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  lastPaidDateGreaterThan(DateTime? value, {bool include = false}) {
+      lastPaidDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'lastPaidDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastPaidDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  lastPaidDateLessThan(DateTime? value, {bool include = false}) {
+      lastPaidDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'lastPaidDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastPaidDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  lastPaidDateBetween(
+      lastPaidDateBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'lastPaidDate',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastPaidDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
@@ -805,49 +806,43 @@ extension RecurringBillQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'name',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nameGreaterThan(
+      nameGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'name',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nameLessThan(
+      nameLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'name',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -859,253 +854,253 @@ extension RecurringBillQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'name',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'name',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nameStartsWith(String value, {bool caseSensitive = true}) {
+      nameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'name',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nameEndsWith(String value, {bool caseSensitive = true}) {
+      nameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'name',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nameContains(String value, {bool caseSensitive = true}) {
+      nameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'name',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition> nameMatches(
-    String pattern, {
-    bool caseSensitive = true,
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'name',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
+      nameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'name',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
+      nameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'name',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
+      nextDueDateEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nextDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
+      nextDueDateGreaterThan(
+    DateTime value, {
+    bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'name',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'nextDueDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nameIsEmpty() {
+      nextDueDateLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'name', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'nextDueDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nameIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'name', value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nextDueDateEqualTo(DateTime value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'nextDueDate', value: value),
-      );
-    });
-  }
-
-  QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nextDueDateGreaterThan(DateTime value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'nextDueDate',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nextDueDateLessThan(DateTime value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'nextDueDate',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  nextDueDateBetween(
+      nextDueDateBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'nextDueDate',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'nextDueDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  paymentMethodEqualTo(PaymentMethod value) {
+      paymentMethodEqualTo(PaymentMethod value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'paymentMethod', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'paymentMethod',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  paymentMethodGreaterThan(PaymentMethod value, {bool include = false}) {
+      paymentMethodGreaterThan(
+    PaymentMethod value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'paymentMethod',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'paymentMethod',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  paymentMethodLessThan(PaymentMethod value, {bool include = false}) {
+      paymentMethodLessThan(
+    PaymentMethod value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'paymentMethod',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'paymentMethod',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  paymentMethodBetween(
+      paymentMethodBetween(
     PaymentMethod lower,
     PaymentMethod upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'paymentMethod',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'paymentMethod',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  reminderDaysBeforeEqualTo(int value) {
+      reminderDaysBeforeEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'reminderDaysBefore', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'reminderDaysBefore',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  reminderDaysBeforeGreaterThan(int value, {bool include = false}) {
+      reminderDaysBeforeGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'reminderDaysBefore',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'reminderDaysBefore',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  reminderDaysBeforeLessThan(int value, {bool include = false}) {
+      reminderDaysBeforeLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'reminderDaysBefore',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'reminderDaysBefore',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterFilterCondition>
-  reminderDaysBeforeBetween(
+      reminderDaysBeforeBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'reminderDaysBefore',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'reminderDaysBefore',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -1137,7 +1132,7 @@ extension RecurringBillQuerySortBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByCategoryDesc() {
+      sortByCategoryDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'category', Sort.desc);
     });
@@ -1150,21 +1145,21 @@ extension RecurringBillQuerySortBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByCreatedAtDesc() {
+      sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByDaysUntilDue() {
+      sortByDaysUntilDue() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'daysUntilDue', Sort.asc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByDaysUntilDueDesc() {
+      sortByDaysUntilDueDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'daysUntilDue', Sort.desc);
     });
@@ -1177,7 +1172,7 @@ extension RecurringBillQuerySortBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByFrequencyDesc() {
+      sortByFrequencyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'frequency', Sort.desc);
     });
@@ -1190,7 +1185,7 @@ extension RecurringBillQuerySortBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByIsActiveDesc() {
+      sortByIsActiveDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isActive', Sort.desc);
     });
@@ -1203,7 +1198,7 @@ extension RecurringBillQuerySortBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByIsDueSoonDesc() {
+      sortByIsDueSoonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isDueSoon', Sort.desc);
     });
@@ -1216,21 +1211,21 @@ extension RecurringBillQuerySortBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByIsOverdueDesc() {
+      sortByIsOverdueDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOverdue', Sort.desc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByLastPaidDate() {
+      sortByLastPaidDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastPaidDate', Sort.asc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByLastPaidDateDesc() {
+      sortByLastPaidDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastPaidDate', Sort.desc);
     });
@@ -1255,35 +1250,35 @@ extension RecurringBillQuerySortBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByNextDueDateDesc() {
+      sortByNextDueDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextDueDate', Sort.desc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByPaymentMethod() {
+      sortByPaymentMethod() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentMethod', Sort.asc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByPaymentMethodDesc() {
+      sortByPaymentMethodDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentMethod', Sort.desc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByReminderDaysBefore() {
+      sortByReminderDaysBefore() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'reminderDaysBefore', Sort.asc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  sortByReminderDaysBeforeDesc() {
+      sortByReminderDaysBeforeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'reminderDaysBefore', Sort.desc);
     });
@@ -1311,7 +1306,7 @@ extension RecurringBillQuerySortThenBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByCategoryDesc() {
+      thenByCategoryDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'category', Sort.desc);
     });
@@ -1324,21 +1319,21 @@ extension RecurringBillQuerySortThenBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByCreatedAtDesc() {
+      thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByDaysUntilDue() {
+      thenByDaysUntilDue() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'daysUntilDue', Sort.asc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByDaysUntilDueDesc() {
+      thenByDaysUntilDueDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'daysUntilDue', Sort.desc);
     });
@@ -1351,7 +1346,7 @@ extension RecurringBillQuerySortThenBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByFrequencyDesc() {
+      thenByFrequencyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'frequency', Sort.desc);
     });
@@ -1376,7 +1371,7 @@ extension RecurringBillQuerySortThenBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByIsActiveDesc() {
+      thenByIsActiveDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isActive', Sort.desc);
     });
@@ -1389,7 +1384,7 @@ extension RecurringBillQuerySortThenBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByIsDueSoonDesc() {
+      thenByIsDueSoonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isDueSoon', Sort.desc);
     });
@@ -1402,21 +1397,21 @@ extension RecurringBillQuerySortThenBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByIsOverdueDesc() {
+      thenByIsOverdueDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOverdue', Sort.desc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByLastPaidDate() {
+      thenByLastPaidDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastPaidDate', Sort.asc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByLastPaidDateDesc() {
+      thenByLastPaidDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastPaidDate', Sort.desc);
     });
@@ -1441,35 +1436,35 @@ extension RecurringBillQuerySortThenBy
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByNextDueDateDesc() {
+      thenByNextDueDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextDueDate', Sort.desc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByPaymentMethod() {
+      thenByPaymentMethod() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentMethod', Sort.asc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByPaymentMethodDesc() {
+      thenByPaymentMethodDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentMethod', Sort.desc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByReminderDaysBefore() {
+      thenByReminderDaysBefore() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'reminderDaysBefore', Sort.asc);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QAfterSortBy>
-  thenByReminderDaysBeforeDesc() {
+      thenByReminderDaysBeforeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'reminderDaysBefore', Sort.desc);
     });
@@ -1497,7 +1492,7 @@ extension RecurringBillQueryWhereDistinct
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QDistinct>
-  distinctByDaysUntilDue() {
+      distinctByDaysUntilDue() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'daysUntilDue');
     });
@@ -1528,36 +1523,35 @@ extension RecurringBillQueryWhereDistinct
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QDistinct>
-  distinctByLastPaidDate() {
+      distinctByLastPaidDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastPaidDate');
     });
   }
 
-  QueryBuilder<RecurringBill, RecurringBill, QDistinct> distinctByName({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<RecurringBill, RecurringBill, QDistinct> distinctByName(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QDistinct>
-  distinctByNextDueDate() {
+      distinctByNextDueDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nextDueDate');
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QDistinct>
-  distinctByPaymentMethod() {
+      distinctByPaymentMethod() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'paymentMethod');
     });
   }
 
   QueryBuilder<RecurringBill, RecurringBill, QDistinct>
-  distinctByReminderDaysBefore() {
+      distinctByReminderDaysBefore() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'reminderDaysBefore');
     });
@@ -1579,7 +1573,7 @@ extension RecurringBillQueryProperty
   }
 
   QueryBuilder<RecurringBill, ExpenseCategory, QQueryOperations>
-  categoryProperty() {
+      categoryProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'category');
     });
@@ -1598,7 +1592,7 @@ extension RecurringBillQueryProperty
   }
 
   QueryBuilder<RecurringBill, BillFrequency, QQueryOperations>
-  frequencyProperty() {
+      frequencyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'frequency');
     });
@@ -1623,7 +1617,7 @@ extension RecurringBillQueryProperty
   }
 
   QueryBuilder<RecurringBill, DateTime?, QQueryOperations>
-  lastPaidDateProperty() {
+      lastPaidDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastPaidDate');
     });
@@ -1636,21 +1630,21 @@ extension RecurringBillQueryProperty
   }
 
   QueryBuilder<RecurringBill, DateTime, QQueryOperations>
-  nextDueDateProperty() {
+      nextDueDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nextDueDate');
     });
   }
 
   QueryBuilder<RecurringBill, PaymentMethod, QQueryOperations>
-  paymentMethodProperty() {
+      paymentMethodProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'paymentMethod');
     });
   }
 
   QueryBuilder<RecurringBill, int, QQueryOperations>
-  reminderDaysBeforeProperty() {
+      reminderDaysBeforeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'reminderDaysBefore');
     });
