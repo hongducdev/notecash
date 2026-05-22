@@ -1,50 +1,58 @@
 # NoteCash
 
-Ung dung quan ly chi tieu ca nhan cho Android. Theo doi tai chinh hang ngay, quet hoa don tu dong, nhan dien giao dich ngan hang.
+Ứng dụng quản lý chi tiêu cá nhân cho Android. Theo dõi tài chính hằng ngày, quét hóa đơn tự động, nhận diện giao dịch ngân hàng.
 
-## Tinh nang
+## ✨ Tính năng
 
-### Quan ly chi tieu
-- Ghi chi/thu nhanh voi phan loai tu dong (An uong, Di chuyen, Mua sam, Hoa don, Giai tri)
-- Theo doi so du tien mat va ngan hang rieng biet
-- Lich su chi tieu theo ngay, thang
+### 🧾 Quản lý chi tiêu
 
-### Quet hoa don (OCR)
-- Chup anh hoa don, AI trich xuat tong tien va danh sach san pham
-- Toi uu cho hoa don Viet Nam (sieu thi, cua hang, nha hang)
-- Luu theo tung san pham hoac gop thanh 1 khoan
+- Ghi chi/thu nhanh với phân loại tự động (Ăn uống, Di chuyển, Mua sắm, Hóa đơn, Giải trí)
+- Theo dõi số dư tiền mặt và ngân hàng riêng biệt
+- Lịch sử chi tiêu theo ngày, tháng
 
-### Nhan dien giao dich ngan hang
-- Doc thong bao tu Techcombank, Vietinbank, Timo, Cake, Momo, ZaloPay
-- Nhan notification de them giao dich ngay
+### 📷 Quét hóa đơn (OCR)
 
-### Nhac nho hoa don dinh ky
-- Quan ly hoa don dien, nuoc, internet, thue nha
-- Thong bao truoc ngay den han
-- Tu dong tai tao sau khi thanh toan
+- Chụp ảnh hóa đơn, AI trích xuất tổng tiền và danh sách sản phẩm
+- Tối ưu cho hóa đơn Việt Nam (siêu thị, cửa hàng, nhà hàng)
+- Lưu theo từng sản phẩm hoặc gộp thành 1 khoản
 
-### Bao mat & Sao luu
-- Khoa ung dung bang PIN hoac van tay/Face ID
-- Xuat/nhap file XML de backup
-- Du lieu luu cuc bo, khong upload len server
+### 🏦 Nhận diện giao dịch ngân hàng
 
-### Widget man hinh chinh
-- Hien thi so du va hoa don sap den han
-- Nhan widget de ghi chi tieu nhanh
+- Đọc thông báo từ Techcombank, VietinBank, Timo, Cake, MoMo, ZaloPay
+- Nhận notification để thêm giao dịch ngay
 
-## Yeu cau
+### 🔁 Nhắc nhở hóa đơn định kỳ
+
+- Quản lý hóa đơn điện, nước, internet, thuê nhà
+- Thông báo trước ngày đến hạn
+- Tự động tái tạo sau khi thanh toán
+
+### 🔒 Bảo mật & Sao lưu
+
+- Khóa ứng dụng bằng PIN hoặc vân tay/Face ID
+- Xuất/nhập file XML để sao lưu
+- Dữ liệu lưu cục bộ, không upload lên server
+
+### 🧩 Widget màn hình chính
+
+- Hiển thị số dư và hóa đơn sắp đến hạn
+- Nhấn widget để ghi chi tiêu nhanh
+
+## ✅ Yêu cầu
 
 - Android 6.0+ (API 23)
-- Quyen: Camera, Thong bao, Notification Listener (tuy chon)
+- Quyền: Camera, Thông báo, Notification Listener (tùy chọn)
 
-## Cai dat
+## ⚙️ Cài đặt
 
-### Tu Release
-1. Tai APK tu [Releases](https://github.com/hongducdev/notecash/releases)
-2. Cai dat tren thiet bi Android
-3. Thiet lap so du ban dau
+### 📦 Từ Release
 
-### Build tu source
+1. Tải APK từ [Releases](https://github.com/hongducdev/notecash/releases)
+2. Cài đặt trên thiết bị Android
+3. Thiết lập số dư ban đầu
+
+### 🛠️ Build từ source
+
 ```bash
 git clone https://github.com/hongducdev/notecash.git
 cd notecash
@@ -53,29 +61,29 @@ flutter pub run build_runner build --delete-conflicting-outputs
 flutter build apk --release
 ```
 
-## Cong nghe
+## 🧰 Công nghệ
 
-| Component | Library |
-|-----------|---------|
-| Framework | Flutter 3.x |
-| State Management | Riverpod |
-| Database | Isar |
-| Routing | GoRouter |
-| OCR | Google ML Kit Text Recognition |
-| Notifications | flutter_local_notifications |
-| Home Widget | home_widget |
+| Component        | Library                        |
+| ---------------- | ------------------------------ |
+| Framework        | Flutter 3.x                    |
+| State Management | Riverpod                       |
+| Database         | Isar                           |
+| Routing          | GoRouter                       |
+| OCR              | Google ML Kit Text Recognition |
+| Notifications    | flutter_local_notifications    |
+| Home Widget      | home_widget                    |
 
-## Dong gop
+## 🤝 Đóng góp
 
 1. Fork repository
-2. Tao branch moi (`git checkout -b feature/TinhNangMoi`)
-3. Commit thay doi
-4. Push va tao Pull Request
+2. Tạo branch mới (`git checkout -b feature/TinhNangMoi`)
+3. Commit thay đổi
+4. Push và tạo Pull Request
 
-## Giay phep
+## 📄 Giấy phép
 
 MIT License
 
-## Tac gia
+## 👤 Tác giả
 
 **Hong Duc** - [@hongducdev](https://github.com/hongducdev)
