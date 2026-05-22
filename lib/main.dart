@@ -8,6 +8,7 @@ import 'package:notecash/core/providers.dart';
 import 'package:notecash/core/router.dart';
 import 'package:notecash/core/theme.dart';
 import 'package:notecash/services/home_widget_service.dart';
+import 'package:notecash/services/bill_reminder_service.dart';
 import 'package:notecash/services/notification_recognition_service.dart';
 
 @pragma('vm:entry-point')
@@ -15,6 +16,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await HomeWidgetService.init();
+  await BillReminderService.init();
   await NotificationRecognitionService.init();
 
   final container = ProviderContainer();
@@ -77,7 +79,9 @@ class _NoteCashAppState extends ConsumerState<NoteCashApp>
     if (uri?.host == 'add-expense') {
       router.push('/add-expense');
     } else if (uri?.host == 'dashboard') {
-      router.go('/'); // Quay về trang chủ
+      router.go('/');
+    } else if (uri?.host == 'bills') {
+      router.push('/bills');
     }
   }
 

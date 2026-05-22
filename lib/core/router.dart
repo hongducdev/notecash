@@ -1,4 +1,7 @@
 import 'package:go_router/go_router.dart';
+import 'package:notecash/features/bills/domain/recurring_bill.dart';
+import 'package:notecash/features/bills/presentation/bills_screen.dart';
+import 'package:notecash/features/bills/presentation/bill_input_screen.dart';
 import 'package:notecash/features/dashboard/presentation/main_screen.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
 import 'package:notecash/features/expense/presentation/expense_input_screen.dart';
@@ -31,6 +34,12 @@ final router = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(path: '/bills', builder: (context, state) => const BillsScreen()),
+    GoRoute(
+      path: '/add-bill',
+      builder: (context, state) =>
+          BillInputScreen(billToEdit: state.extra as RecurringBill?),
     ),
   ],
 );

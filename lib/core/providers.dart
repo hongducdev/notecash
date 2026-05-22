@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notecash/core/models/user_settings.dart';
+import 'package:notecash/features/bills/domain/recurring_bill.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
 import 'package:notecash/services/backup_service.dart';
 import 'package:notecash/services/isar_service.dart';
@@ -65,4 +66,14 @@ final monthExpensesProvider = FutureProvider.family<List<Expense>, DateTime>((
 final allExpensesProvider = FutureProvider<List<Expense>>((ref) async {
   final service = ref.watch(isarServiceProvider);
   return service.getAllExpenses();
+});
+
+final recurringBillsProvider = FutureProvider<List<RecurringBill>>((ref) async {
+  final service = ref.watch(isarServiceProvider);
+  return service.getAllRecurringBills();
+});
+
+final upcomingBillsProvider = FutureProvider<List<RecurringBill>>((ref) async {
+  final service = ref.watch(isarServiceProvider);
+  return service.getUpcomingBills();
 });

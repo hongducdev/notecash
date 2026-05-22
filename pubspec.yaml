@@ -63,6 +63,10 @@ dependencies:
     share_plus: ^9.0.0
     file_picker: ^8.0.0
 
+    # Offline enhancements
+    shared_preferences: ^2.3.3
+    timezone: ^0.9.4
+
 dev_dependencies:
     flutter_test:
         sdk: flutter

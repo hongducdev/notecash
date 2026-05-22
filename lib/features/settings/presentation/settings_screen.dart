@@ -293,7 +293,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   await backupService.exportToFile();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã xuất file XML thành công')),
+                      const SnackBar(
+                        content: Text('Đã xuất file XML thành công'),
+                      ),
                     );
                   }
                 } catch (e) {
@@ -318,11 +320,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ref.invalidate(allExpensesProvider);
                       ref.invalidate(userSettingsProvider);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Đã nhập $count giao dịch thành công')),
+                        SnackBar(
+                          content: Text('Đã nhập $count giao dịch thành công'),
+                        ),
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Không có dữ liệu mới để nhập')),
+                        const SnackBar(
+                          content: Text('Không có dữ liệu mới để nhập'),
+                        ),
                       );
                     }
                   }
@@ -391,7 +397,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             )
           : null,
       trailing: trailing,

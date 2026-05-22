@@ -23,6 +23,20 @@ class NotecashWidgetProvider : HomeWidgetProvider() {
                 val balance = widgetData.getString("balance", "₫0")
                 setTextViewText(R.id.widget_balance, balance)
 
+                val upcomingBill = widgetData.getString("upcoming_bill", "") ?: ""
+                if (upcomingBill.isNotEmpty()) {
+                    setTextViewText(R.id.widget_upcoming_bill, upcomingBill)
+                    setViewVisibility(R.id.widget_upcoming_bill, android.view.View.VISIBLE)
+                    val billsIntent = HomeWidgetLaunchIntent.getActivity(
+                        context,
+                        MainActivity::class.java,
+                        Uri.parse("notecash://bills")
+                    )
+                    setOnClickPendingIntent(R.id.widget_upcoming_bill, billsIntent)
+                } else {
+                    setViewVisibility(R.id.widget_upcoming_bill, android.view.View.GONE)
+                }
+
                 // Quick Entry button - opens add expense screen
                 val addExpenseIntent = HomeWidgetLaunchIntent.getActivity(
                     context,

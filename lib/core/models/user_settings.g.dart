@@ -46,7 +46,7 @@ const UserSettingsSchema = CollectionSchema(
       id: 5,
       name: r'updatedAt',
       type: IsarType.dateTime,
-    )
+    ),
   },
   estimateSize: _userSettingsEstimateSize,
   serialize: _userSettingsSerialize,
@@ -149,7 +149,10 @@ List<IsarLinkBase<dynamic>> _userSettingsGetLinks(UserSettings object) {
 }
 
 void _userSettingsAttach(
-    IsarCollection<dynamic> col, Id id, UserSettings object) {
+  IsarCollection<dynamic> col,
+  Id id,
+  UserSettings object,
+) {
   object.id = id;
 }
 
@@ -166,15 +169,13 @@ extension UserSettingsQueryWhere
     on QueryBuilder<UserSettings, UserSettings, QWhereClause> {
   QueryBuilder<UserSettings, UserSettings, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterWhereClause> idNotEqualTo(
-      Id id) {
+    Id id,
+  ) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -197,8 +198,9 @@ extension UserSettingsQueryWhere
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterWhereClause> idGreaterThan(
-      Id id,
-      {bool include = false}) {
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -206,8 +208,10 @@ extension UserSettingsQueryWhere
     });
   }
 
-  QueryBuilder<UserSettings, UserSettings, QAfterWhereClause> idLessThan(Id id,
-      {bool include = false}) {
+  QueryBuilder<UserSettings, UserSettings, QAfterWhereClause> idLessThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -222,12 +226,14 @@ extension UserSettingsQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -235,12 +241,12 @@ extension UserSettingsQueryWhere
 extension UserSettingsQueryFilter
     on QueryBuilder<UserSettings, UserSettings, QFilterCondition> {
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition> idEqualTo(
-      Id value) {
+    Id value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
@@ -249,11 +255,13 @@ extension UserSettingsQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -262,11 +270,13 @@ extension UserSettingsQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -277,64 +287,69 @@ extension UserSettingsQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      initialBankBalanceEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
+  initialBankBalanceEqualTo(double value, {double epsilon = Query.epsilon}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'initialBankBalance',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'initialBankBalance',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      initialBankBalanceGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'initialBankBalance',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      initialBankBalanceLessThan(
+  initialBankBalanceGreaterThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'initialBankBalance',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'initialBankBalance',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      initialBankBalanceBetween(
+  initialBankBalanceLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'initialBankBalance',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+  initialBankBalanceBetween(
     double lower,
     double upper, {
     bool includeLower = true,
@@ -342,65 +357,70 @@ extension UserSettingsQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'initialBankBalance',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'initialBankBalance',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      initialCashBalanceEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
+  initialCashBalanceEqualTo(double value, {double epsilon = Query.epsilon}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'initialCashBalance',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'initialCashBalance',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      initialCashBalanceGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'initialCashBalance',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      initialCashBalanceLessThan(
+  initialCashBalanceGreaterThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'initialCashBalance',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'initialCashBalance',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      initialCashBalanceBetween(
+  initialCashBalanceLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'initialCashBalance',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+  initialCashBalanceBetween(
     double lower,
     double upper, {
     bool includeLower = true,
@@ -408,75 +428,82 @@ extension UserSettingsQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'initialCashBalance',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'initialCashBalance',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      isSetupCompletedEqualTo(bool value) {
+  isSetupCompletedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isSetupCompleted',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isSetupCompleted', value: value),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementEqualTo(
+  trackedNotificationAppsElementEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'trackedNotificationApps',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'trackedNotificationApps',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'trackedNotificationApps',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementLessThan(
+  trackedNotificationAppsElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'trackedNotificationApps',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'trackedNotificationApps',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementBetween(
+  trackedNotificationAppsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'trackedNotificationApps',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+  trackedNotificationAppsElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -484,91 +511,109 @@ extension UserSettingsQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'trackedNotificationApps',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'trackedNotificationApps',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementStartsWith(
+  trackedNotificationAppsElementStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'trackedNotificationApps',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'trackedNotificationApps',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementEndsWith(
+  trackedNotificationAppsElementEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'trackedNotificationApps',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'trackedNotificationApps',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementContains(String value,
-          {bool caseSensitive = true}) {
+  trackedNotificationAppsElementContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'trackedNotificationApps',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'trackedNotificationApps',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementMatches(String pattern,
-          {bool caseSensitive = true}) {
+  trackedNotificationAppsElementMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'trackedNotificationApps',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'trackedNotificationApps',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementIsEmpty() {
+  trackedNotificationAppsElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'trackedNotificationApps',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'trackedNotificationApps',
+          value: '',
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsElementIsNotEmpty() {
+  trackedNotificationAppsElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'trackedNotificationApps',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'trackedNotificationApps',
+          value: '',
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsLengthEqualTo(int length) {
+  trackedNotificationAppsLengthEqualTo(int length) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
         r'trackedNotificationApps',
@@ -581,20 +626,14 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsIsEmpty() {
+  trackedNotificationAppsIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'trackedNotificationApps',
-        0,
-        true,
-        0,
-        true,
-      );
+      return query.listLength(r'trackedNotificationApps', 0, true, 0, true);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsIsNotEmpty() {
+  trackedNotificationAppsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
         r'trackedNotificationApps',
@@ -607,10 +646,7 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
+  trackedNotificationAppsLengthLessThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
         r'trackedNotificationApps',
@@ -623,10 +659,7 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
+  trackedNotificationAppsLengthGreaterThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
         r'trackedNotificationApps',
@@ -639,7 +672,7 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationAppsLengthBetween(
+  trackedNotificationAppsLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -657,53 +690,59 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementEqualTo(
+  trackedNotificationPackagesElementEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'trackedNotificationPackages',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'trackedNotificationPackages',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'trackedNotificationPackages',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementLessThan(
+  trackedNotificationPackagesElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'trackedNotificationPackages',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'trackedNotificationPackages',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementBetween(
+  trackedNotificationPackagesElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'trackedNotificationPackages',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
+  trackedNotificationPackagesElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -711,91 +750,109 @@ extension UserSettingsQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'trackedNotificationPackages',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'trackedNotificationPackages',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementStartsWith(
+  trackedNotificationPackagesElementStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'trackedNotificationPackages',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'trackedNotificationPackages',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementEndsWith(
+  trackedNotificationPackagesElementEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'trackedNotificationPackages',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'trackedNotificationPackages',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementContains(String value,
-          {bool caseSensitive = true}) {
+  trackedNotificationPackagesElementContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'trackedNotificationPackages',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'trackedNotificationPackages',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementMatches(String pattern,
-          {bool caseSensitive = true}) {
+  trackedNotificationPackagesElementMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'trackedNotificationPackages',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'trackedNotificationPackages',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementIsEmpty() {
+  trackedNotificationPackagesElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'trackedNotificationPackages',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'trackedNotificationPackages',
+          value: '',
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesElementIsNotEmpty() {
+  trackedNotificationPackagesElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'trackedNotificationPackages',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'trackedNotificationPackages',
+          value: '',
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesLengthEqualTo(int length) {
+  trackedNotificationPackagesLengthEqualTo(int length) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
         r'trackedNotificationPackages',
@@ -808,20 +865,14 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesIsEmpty() {
+  trackedNotificationPackagesIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'trackedNotificationPackages',
-        0,
-        true,
-        0,
-        true,
-      );
+      return query.listLength(r'trackedNotificationPackages', 0, true, 0, true);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesIsNotEmpty() {
+  trackedNotificationPackagesIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
         r'trackedNotificationPackages',
@@ -834,7 +885,7 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesLengthLessThan(
+  trackedNotificationPackagesLengthLessThan(
     int length, {
     bool include = false,
   }) {
@@ -850,7 +901,7 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesLengthGreaterThan(
+  trackedNotificationPackagesLengthGreaterThan(
     int length, {
     bool include = false,
   }) {
@@ -866,7 +917,7 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      trackedNotificationPackagesLengthBetween(
+  trackedNotificationPackagesLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -884,76 +935,75 @@ extension UserSettingsQueryFilter
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      updatedAtIsNull() {
+  updatedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'updatedAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'updatedAt'),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      updatedAtIsNotNull() {
+  updatedAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'updatedAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'updatedAt'),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      updatedAtEqualTo(DateTime? value) {
+  updatedAtEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'updatedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'updatedAt', value: value),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      updatedAtGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  updatedAtGreaterThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'updatedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      updatedAtLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  updatedAtLessThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'updatedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterFilterCondition>
-      updatedAtBetween(
+  updatedAtBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'updatedAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'updatedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -967,42 +1017,42 @@ extension UserSettingsQueryLinks
 extension UserSettingsQuerySortBy
     on QueryBuilder<UserSettings, UserSettings, QSortBy> {
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      sortByInitialBankBalance() {
+  sortByInitialBankBalance() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'initialBankBalance', Sort.asc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      sortByInitialBankBalanceDesc() {
+  sortByInitialBankBalanceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'initialBankBalance', Sort.desc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      sortByInitialCashBalance() {
+  sortByInitialCashBalance() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'initialCashBalance', Sort.asc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      sortByInitialCashBalanceDesc() {
+  sortByInitialCashBalanceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'initialCashBalance', Sort.desc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      sortByIsSetupCompleted() {
+  sortByIsSetupCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isSetupCompleted', Sort.asc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      sortByIsSetupCompletedDesc() {
+  sortByIsSetupCompletedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isSetupCompleted', Sort.desc);
     });
@@ -1036,42 +1086,42 @@ extension UserSettingsQuerySortThenBy
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      thenByInitialBankBalance() {
+  thenByInitialBankBalance() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'initialBankBalance', Sort.asc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      thenByInitialBankBalanceDesc() {
+  thenByInitialBankBalanceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'initialBankBalance', Sort.desc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      thenByInitialCashBalance() {
+  thenByInitialCashBalance() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'initialCashBalance', Sort.asc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      thenByInitialCashBalanceDesc() {
+  thenByInitialCashBalanceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'initialCashBalance', Sort.desc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      thenByIsSetupCompleted() {
+  thenByIsSetupCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isSetupCompleted', Sort.asc);
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QAfterSortBy>
-      thenByIsSetupCompletedDesc() {
+  thenByIsSetupCompletedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isSetupCompleted', Sort.desc);
     });
@@ -1093,35 +1143,35 @@ extension UserSettingsQuerySortThenBy
 extension UserSettingsQueryWhereDistinct
     on QueryBuilder<UserSettings, UserSettings, QDistinct> {
   QueryBuilder<UserSettings, UserSettings, QDistinct>
-      distinctByInitialBankBalance() {
+  distinctByInitialBankBalance() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'initialBankBalance');
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QDistinct>
-      distinctByInitialCashBalance() {
+  distinctByInitialCashBalance() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'initialCashBalance');
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QDistinct>
-      distinctByIsSetupCompleted() {
+  distinctByIsSetupCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isSetupCompleted');
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QDistinct>
-      distinctByTrackedNotificationApps() {
+  distinctByTrackedNotificationApps() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'trackedNotificationApps');
     });
   }
 
   QueryBuilder<UserSettings, UserSettings, QDistinct>
-      distinctByTrackedNotificationPackages() {
+  distinctByTrackedNotificationPackages() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'trackedNotificationPackages');
     });
@@ -1143,35 +1193,35 @@ extension UserSettingsQueryProperty
   }
 
   QueryBuilder<UserSettings, double, QQueryOperations>
-      initialBankBalanceProperty() {
+  initialBankBalanceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'initialBankBalance');
     });
   }
 
   QueryBuilder<UserSettings, double, QQueryOperations>
-      initialCashBalanceProperty() {
+  initialCashBalanceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'initialCashBalance');
     });
   }
 
   QueryBuilder<UserSettings, bool, QQueryOperations>
-      isSetupCompletedProperty() {
+  isSetupCompletedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isSetupCompleted');
     });
   }
 
   QueryBuilder<UserSettings, List<String>, QQueryOperations>
-      trackedNotificationAppsProperty() {
+  trackedNotificationAppsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'trackedNotificationApps');
     });
   }
 
   QueryBuilder<UserSettings, List<String>, QQueryOperations>
-      trackedNotificationPackagesProperty() {
+  trackedNotificationPackagesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'trackedNotificationPackages');
     });

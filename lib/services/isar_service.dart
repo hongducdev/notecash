@@ -1,7 +1,10 @@
 import 'package:isar/isar.dart';
 import 'package:notecash/core/models/user_settings.dart';
+import 'package:notecash/features/bills/domain/recurring_bill.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
+import 'package:notecash/services/bill_reminder_service.dart';
 import 'package:notecash/services/home_widget_service.dart';
+import 'package:notecash/services/notification_recognition_service.dart';
 import 'package:path_provider/path_provider.dart';
 
 class IsarService {
@@ -12,8 +15,11 @@ class IsarService {
     isar = await Isar.open([
       ExpenseSchema,
       UserSettingsSchema,
+      RecurringBillSchema,
     ], directory: dir.path);
+    NotificationRecognitionService.setDatabaseService(this);
     await updateHomeWidget();
+    await BillReminderService.rescheduleAll(this);
   }
 
   // User Settings Methods
@@ -56,7 +62,58 @@ class IsarService {
 
   Future<void> updateHomeWidget() async {
     final balance = await getBalanceUntil(DateTime.now());
+    final upcomingBills = await getUpcomingBills(limit: 3);
     await HomeWidgetService.updateBalance(balance);
+    await HomeWidgetService.updateBills(upcomingBills);
+  }
+
+  Future<void> saveRecurringBill(RecurringBill bill) async {
+    await isar.writeTxn(() async {
+      await isar.recurringBills.put(bill);
+    });
+    await updateHomeWidget();
+    await BillReminderService.scheduleReminder(bill);
+  }
+
+  Future<void> deleteRecurringBill(Id id) async {
+    await isar.writeTxn(() async {
+      await isar.recurringBills.delete(id);
+    });
+    await updateHomeWidget();
+    await BillReminderService.cancelReminder(id);
+  }
+
+  Future<List<RecurringBill>> getAllRecurringBills() async {
+    return isar.recurringBills.where().findAll();
+  }
+
+  Future<List<RecurringBill>> getUpcomingBills({int limit = 5}) async {
+    return isar.recurringBills
+        .filter()
+        .isActiveEqualTo(true)
+        .sortByNextDueDate()
+        .limit(limit)
+        .findAll();
+  }
+
+  Future<void> markBillAsPaid(RecurringBill bill) async {
+    final expense = Expense()
+      ..amount = bill.amount
+      ..isIncome = false
+      ..note = bill.name
+      ..category = bill.category
+      ..paymentMethod = bill.paymentMethod
+      ..createdAt = DateTime.now();
+
+    bill.lastPaidDate = DateTime.now();
+    bill.nextDueDate = bill.getNextDueDateAfterPayment();
+
+    await isar.writeTxn(() async {
+      await isar.expenses.put(expense);
+      await isar.recurringBills.put(bill);
+    });
+    await updateHomeWidget();
+    await BillReminderService.scheduleReminder(bill);
   }
 
   Future<List<Expense>> getAllExpenses() async {

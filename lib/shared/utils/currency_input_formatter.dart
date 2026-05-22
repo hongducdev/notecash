@@ -13,7 +13,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
 
     // Only allow numbers
     final String cleanText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-    
+
     if (cleanText.isEmpty) {
       return newValue.copyWith(text: '');
     }

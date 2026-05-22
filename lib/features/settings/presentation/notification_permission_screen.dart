@@ -45,8 +45,9 @@ class _NotificationPermissionScreenState
     final hasRead = await NotificationListenerService.isPermissionGranted();
     final canSend =
         await NotificationRecognitionService.areQuickAddNotificationsEnabled();
-    final setupCompleted =
-        await ref.read(isarServiceProvider).isSetupCompleted();
+    final setupCompleted = await ref
+        .read(isarServiceProvider)
+        .isSetupCompleted();
 
     if (!mounted) return;
     setState(() {
@@ -214,10 +215,12 @@ class _StatusPill extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final s = status;
     final label = s == null ? '...' : (s ? 'Đã cấp' : 'Chưa cấp');
-    final Color bg =
-        s == true ? colorScheme.primaryContainer : colorScheme.surfaceContainerHighest;
-    final Color fg =
-        s == true ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant;
+    final Color bg = s == true
+        ? colorScheme.primaryContainer
+        : colorScheme.surfaceContainerHighest;
+    final Color fg = s == true
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onSurfaceVariant;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -235,4 +238,3 @@ class _StatusPill extends StatelessWidget {
     );
   }
 }
-

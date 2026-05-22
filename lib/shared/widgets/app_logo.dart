@@ -4,11 +4,7 @@ class AppLogo extends StatelessWidget {
   final double size;
   final bool showText;
 
-  const AppLogo({
-    super.key,
-    this.size = 40,
-    this.showText = true,
-  });
+  const AppLogo({super.key, this.size = 40, this.showText = true});
 
   @override
   Widget build(BuildContext context) {
@@ -40,10 +36,7 @@ class AppLogo extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(size * 0.25),
-            child: Image.asset(
-              'assets/icon/logo.png',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/icon/logo.png', fit: BoxFit.cover),
           ),
         ),
         if (showText) ...[
