@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:intl/intl.dart';
 import 'package:notecash/core/providers.dart';
 import 'package:notecash/features/expense/domain/expense.dart';
@@ -33,8 +31,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _initSpeech() async {
-    _speechAvailable = await _speech.initialize();
-    setState(() {});
+    try {
+      _speechAvailable = await _speech.initialize(
+        onError: (error) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Lỗi giọng nói: ${error.errorMsg}')),
+            );
+          }
+        },
+        onStatus: (status) {
+          if (status == 'done' || status == 'notListening') {
+            setState(() => _isListening = false);
+          }
+        },
+      );
+      if (!_speechAvailable && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Không thể khởi tạo nhận dạng giọng nói. Vui lòng kiểm tra quyền microphone.',
+            ),
+          ),
+        );
+      }
+      setState(() {});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi khởi tạo giọng nói: $e')));
+      }
+    }
   }
 
   void _addWelcomeMessage() {
@@ -50,49 +78,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _startListening() async {
-    if (!_speechAvailable) return;
+    if (!_speechAvailable) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Nhận dạng giọng nói không khả dụng. Vui lòng kiểm tra quyền microphone trong cài đặt.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
 
-    await _speech.listen(
-      onResult: (result) {
-        setState(() {
-          _controller.text = result.recognizedWords;
-        });
-      },
-      listenOptions: stt.SpeechListenOptions(localeId: 'vi_VN'),
-    );
-    setState(() => _isListening = true);
+    try {
+      await _speech.listen(
+        onResult: (result) {
+          setState(() {
+            _controller.text = result.recognizedWords;
+          });
+        },
+        listenOptions: stt.SpeechListenOptions(
+          localeId: 'vi_VN',
+          cancelOnError: true,
+          partialResults: true,
+        ),
+      );
+      setState(() => _isListening = true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi bắt đầu nghe: $e')));
+      }
+    }
   }
 
   void _stopListening() async {
     await _speech.stop();
     setState(() => _isListening = false);
-  }
-
-  Future<void> _pickImageAndScan() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.camera);
-
-    if (image == null) return;
-
-    final inputImage = InputImage.fromFilePath(image.path);
-    final textRecognizer = TextRecognizer();
-
-    try {
-      final recognizedText = await textRecognizer.processImage(inputImage);
-      if (recognizedText.text.isNotEmpty) {
-        setState(() {
-          _controller.text = recognizedText.text;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi quét văn bản: $e')));
-      }
-    } finally {
-      textRecognizer.close();
-    }
   }
 
   void _handleSubmit() {
@@ -439,11 +463,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       child: Row(
         children: [
-          IconButton(
-            onPressed: _pickImageAndScan,
-            icon: const Icon(Icons.camera_alt_outlined),
-            tooltip: 'Quét hóa đơn',
-          ),
           Expanded(
             child: TextField(
               controller: _controller,

@@ -10,12 +10,17 @@ class ExpenseParserService {
     bool isIncome = false;
 
     // Basic logic: find the part that looks like a number
-    for (var part in parts) {
-      final cleanPart = part.toLowerCase().replaceAll(',', '');
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i];
+      // Remove dots and commas because STT might return "35.000" or "35,000" for Vietnamese
+      final cleanPart = part
+          .toLowerCase()
+          .replaceAll(',', '')
+          .replaceAll('.', '');
 
       if (cleanPart.contains(RegExp(r'\d'))) {
         // Try to parse amount
-        String amountStr = cleanPart.replaceAll(RegExp(r'[^0-9.]'), '');
+        String amountStr = cleanPart.replaceAll(RegExp(r'[^0-9]'), '');
         double? val = double.tryParse(amountStr);
 
         if (val != null) {
@@ -25,6 +30,20 @@ class ExpenseParserService {
             amount = val * 1000000;
           } else {
             amount = val;
+
+            // Check if next word is "ngàn" or "nghìn"
+            if (i + 1 < parts.length) {
+              final nextWord = parts[i + 1].toLowerCase();
+              if (nextWord == 'ngàn' || nextWord == 'nghìn') {
+                amount = val * 1000;
+                i++; // Skip next word so it doesn't go into note
+                continue;
+              } else if (nextWord == 'triệu') {
+                amount = val * 1000000;
+                i++;
+                continue;
+              }
+            }
           }
           continue; // Found amount, move to next part
         }
