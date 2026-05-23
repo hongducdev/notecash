@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notecash/core/providers.dart';
 import 'package:notecash/services/notification_recognition_service.dart';
+import 'package:notecash/services/update_service.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -30,11 +35,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _biometricEnabled = false;
   bool _canUseBiometric = false;
 
+  final UpdateService _updateService = UpdateService();
+  bool _isCheckingUpdate = false;
+  bool _isDownloadingUpdate = false;
+  double _downloadProgress = 0;
+  String _currentVersion = '...';
+  String _currentBuildNumber = '';
+  String? _latestVersion;
+  bool _hasUpdateAvailable = false;
+  String? _updateError;
+
   @override
   void initState() {
     super.initState();
     _loadTrackedApps();
     _loadSecurityState();
+    _loadAppInfo();
+  }
+
+  Future<void> _loadAppInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      _currentVersion = info.version;
+      _currentBuildNumber = info.buildNumber;
+    });
   }
 
   Future<void> _loadSecurityState() async {
@@ -68,7 +93,198 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _updateService.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkForUpdate() async {
+    if (_isCheckingUpdate || _isDownloadingUpdate) return;
+    if (!Platform.isAndroid) return;
+    setState(() {
+      _isCheckingUpdate = true;
+      _updateError = null;
+      _hasUpdateAvailable = false;
+      _latestVersion = null;
+    });
+
+    final result = await _updateService.checkForUpdate();
+    if (!mounted) return;
+
+    setState(() {
+      _isCheckingUpdate = false;
+      _currentVersion = result.currentVersion;
+      _latestVersion = result.latestVersion;
+      _hasUpdateAvailable = result.hasUpdate;
+      _updateError = result.error;
+    });
+
+    if (result.error != null) {
+      if (context.mounted) {
+        final releaseUrl = result.releasePageUrl;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error!),
+            action: releaseUrl == null
+                ? null
+                : SnackBarAction(
+                    label: 'Mở',
+                    onPressed: () async {
+                      await _openExternalUrl(releaseUrl);
+                    },
+                  ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!result.hasUpdate) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Bạn đang dùng phiên bản mới nhất ($_currentVersion)',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (context.mounted) {
+      _showUpdateDialog(result);
+    }
+  }
+
+  Future<void> _downloadAndInstall(UpdateCheckResult result) async {
+    final downloadUrl = result.downloadUrl;
+    if (downloadUrl == null) return;
+    if (_isDownloadingUpdate) return;
+    if (!Platform.isAndroid) return;
+
+    setState(() {
+      _isDownloadingUpdate = true;
+      _downloadProgress = 0;
+    });
+
+    final download = await _updateService.downloadUpdate(downloadUrl, (p) {
+      if (!mounted) return;
+      setState(() {
+        _downloadProgress = p;
+      });
+    });
+
+    if (!mounted) return;
+
+    if (!download.success || download.filePath == null) {
+      setState(() {
+        _isDownloadingUpdate = false;
+      });
+      if (context.mounted) {
+        final releaseUrl = result.releasePageUrl;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(download.error ?? 'Không thể tải bản cập nhật'),
+            action: releaseUrl == null
+                ? null
+                : SnackBarAction(
+                    label: 'Mở',
+                    onPressed: () async {
+                      await _openExternalUrl(releaseUrl);
+                    },
+                  ),
+          ),
+        );
+      }
+      return;
+    }
+
+    final installed = await _updateService.installUpdate(download.filePath!);
+    if (!mounted) return;
+
+    setState(() {
+      _isDownloadingUpdate = false;
+      _downloadProgress = 0;
+    });
+
+    if (!installed && result.releasePageUrl != null) {
+      await _openExternalUrl(result.releasePageUrl!);
+      return;
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            installed
+                ? 'Đang mở trình cài đặt...'
+                : 'Không thể mở trình cài đặt. Đã mở trang tải về.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openExternalUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  void _showUpdateDialog(UpdateCheckResult result) {
+    final latest = result.latestVersion ?? '';
+    final notes = result.releaseNotes?.trim() ?? '';
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Có bản cập nhật mới'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Phiên bản hiện tại: $_currentVersion'),
+                  const SizedBox(height: 4),
+                  Text('Phiên bản mới: $latest'),
+                  if (notes.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Text('Ghi chú phát hành'),
+                    const SizedBox(height: 8),
+                    Text(notes),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Để sau'),
+            ),
+            if (result.releasePageUrl != null)
+              OutlinedButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await _openExternalUrl(result.releasePageUrl!);
+                },
+                child: const Text('Xem Release'),
+              ),
+            FilledButton(
+              onPressed: _isDownloadingUpdate
+                  ? null
+                  : () async {
+                      Navigator.of(context).pop();
+                      await _downloadAndInstall(result);
+                    },
+              child: const Text('Tải & cài đặt'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _ensureInstalledAppsLoaded() async {
@@ -265,9 +481,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           keyboardType: TextInputType.number,
           maxLength: 6,
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Nhập 6 số',
-          ),
+          decoration: const InputDecoration(hintText: 'Nhập 6 số'),
         ),
         actions: [
           TextButton(
@@ -277,8 +491,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           FilledButton(
             onPressed: () async {
               final securityService = ref.read(securityServiceProvider);
-              final isValid =
-                  await securityService.verifyPin(pinController.text);
+              final isValid = await securityService.verifyPin(
+                pinController.text,
+              );
               if (isValid) {
                 if (context.mounted) Navigator.of(context).pop();
                 if (mounted) {
@@ -317,9 +532,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               keyboardType: TextInputType.number,
               maxLength: 6,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'Nhập 6 số',
-              ),
+              decoration: const InputDecoration(hintText: 'Nhập 6 số'),
             ),
           ],
         ),
@@ -334,8 +547,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             onPressed: () async {
               final securityService = ref.read(securityServiceProvider);
-              final isValid =
-                  await securityService.verifyPin(pinController.text);
+              final isValid = await securityService.verifyPin(
+                pinController.text,
+              );
               if (isValid) {
                 await securityService.removePin();
                 await ref.read(appLockControllerProvider).refresh();
@@ -409,6 +623,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Chế độ tối',
               trailing: const Text('Luôn bật'),
             ),
+            if (Platform.isAndroid)
+              _buildTile(
+                Icons.system_update_alt_outlined,
+                'Cập nhật ứng dụng',
+                subtitle: _isDownloadingUpdate
+                    ? 'Đang tải: ${(_downloadProgress * 100).clamp(0, 100).toStringAsFixed(0)}%'
+                    : _updateError != null
+                    ? _updateError!
+                    : _hasUpdateAvailable && _latestVersion != null
+                    ? 'Có bản mới: $_latestVersion'
+                    : 'Phiên bản hiện tại: $_currentVersion',
+                trailing: _isCheckingUpdate || _isDownloadingUpdate
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          value: _isDownloadingUpdate
+                              ? _downloadProgress
+                              : null,
+                        ),
+                      )
+                    : _hasUpdateAvailable && _latestVersion != null
+                    ? Text(
+                        'Mới',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : const Icon(Icons.chevron_right),
+                onTap: () async {
+                  await _checkForUpdate();
+                },
+              ),
           ]),
           _buildSection('Bảo mật', [
             _buildTile(
@@ -436,8 +685,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChanged: (value) async {
                     final securityService = ref.read(securityServiceProvider);
                     if (value) {
-                      final authenticated =
-                          await securityService.authenticateWithBiometric();
+                      final authenticated = await securityService
+                          .authenticateWithBiometric();
                       if (authenticated) {
                         await securityService.setBiometricEnabled(true);
                         setState(() {
@@ -525,7 +774,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildTile(
               Icons.info_outline,
               'Phiên bản',
-              trailing: const Text('1.0.0'),
+              trailing: Text(
+                _currentBuildNumber.isEmpty
+                    ? _currentVersion
+                    : '$_currentVersion+$_currentBuildNumber',
+              ),
             ),
             _buildTile(Icons.star_outline, 'Đánh giá ứng dụng'),
           ]),
