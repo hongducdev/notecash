@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notecash/core/providers.dart';
 import 'package:notecash/features/bills/presentation/bills_screen.dart';
+import 'package:notecash/features/chat/presentation/chat_screen.dart';
 import 'package:notecash/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:notecash/features/settings/presentation/settings_screen.dart';
 import 'package:notecash/services/notification_recognition_service.dart';
@@ -48,6 +49,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final pages = [
       const DashboardScreen(),
       const BillsScreen(),
+      const ChatScreen(),
       const SettingsScreen(),
     ];
 
@@ -72,13 +74,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             label: 'Hóa đơn',
           ),
           NavigationDestination(
+            icon: Icon(Icons.chat_outlined),
+            selectedIcon: Icon(Icons.chat),
+            label: 'Trợ lý',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings),
             label: 'Cài đặt',
           ),
         ],
       ),
-      floatingActionButton: _selectedIndex == 2
+      floatingActionButton: _selectedIndex == 2 || _selectedIndex == 3
           ? null
           : FloatingActionButton(
               onPressed: () => context.push(

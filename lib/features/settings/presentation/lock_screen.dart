@@ -36,7 +36,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     final securityService = ref.read(securityServiceProvider);
     final canUse = await securityService.canUseBiometric();
     final enabled = await securityService.isBiometricEnabled();
-    
+
     if (mounted) {
       setState(() {
         isBiometricAvailable = canUse;
@@ -78,7 +78,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     final defaultPinTheme = PinTheme(
       width: 56,
       height: 56,
@@ -93,12 +93,12 @@ class _LockScreenState extends ConsumerState<LockScreen> {
         border: Border.all(color: colorScheme.outline, width: 1.5),
       ),
     );
-    
+
     final focusedPinTheme = defaultPinTheme.copyDecorationWith(
       border: Border.all(color: colorScheme.primary, width: 2),
       borderRadius: BorderRadius.circular(12),
     );
-    
+
     final submittedPinTheme = defaultPinTheme.copyWith(
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
@@ -106,7 +106,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
         border: Border.all(color: colorScheme.primary, width: 1.5),
       ),
     );
-    
+
     final errorPinTheme = defaultPinTheme.copyDecorationWith(
       border: Border.all(color: colorScheme.error, width: 2),
     );
@@ -119,11 +119,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 60),
-              Icon(
-                Icons.lock_outline,
-                size: 80,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.lock_outline, size: 80, color: colorScheme.primary),
               const SizedBox(height: 32),
               Text(
                 'Nhập mã PIN của bạn',
@@ -155,10 +151,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
               ),
               if (errorMessage.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                Text(
-                  errorMessage,
-                  style: TextStyle(color: colorScheme.error),
-                ),
+                Text(errorMessage, style: TextStyle(color: colorScheme.error)),
               ],
               const Spacer(),
               if (isBiometricAvailable && isBiometricEnabled) ...[

@@ -29,6 +29,7 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
   String _merchantDraft = '';
   ExpenseCategory _singleCategoryDraft = ExpenseCategory.other;
   double _singleTotalDraft = 0;
+  bool _isProductListExpanded = false;
 
   void _addItemDraft() {
     setState(() {
@@ -57,6 +58,7 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
         _isScanning = true;
         _scanResult = null;
         _itemDrafts = <_ReceiptItemDraft>[];
+        _isProductListExpanded = false;
       });
 
       try {
@@ -118,6 +120,11 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
           .toList(growable: false);
       if (items.isEmpty) return;
 
+      final groupId = 'receipt_${now.millisecondsSinceEpoch}';
+      final merchantName = _merchantDraft.trim().isEmpty
+          ? 'Hóa đơn'
+          : _merchantDraft.trim();
+
       final expenses = items
           .map(
             (e) => Expense()
@@ -126,24 +133,52 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
               ..category = e.category
               ..isIncome = false
               ..paymentMethod = _paymentMethodSelection
-              ..createdAt = now,
+              ..createdAt = now
+              ..receiptGroupId = groupId,
           )
           .toList(growable: false);
 
-      await service.saveExpenses(expenses);
+      final groupHeaderExpense = Expense()
+        ..note = merchantName
+        ..amount = expenses.fold<double>(0, (sum, e) => sum + e.amount)
+        ..category = _singleCategoryDraft
+        ..isIncome = false
+        ..paymentMethod = _paymentMethodSelection
+        ..createdAt = now
+        ..receiptGroupId = '${groupId}_header';
+
+      await service.saveExpenses([groupHeaderExpense, ...expenses]);
     }
 
     final monthKey = DateTime(savedDate.year, savedDate.month);
+    final selectedDate = ref.read(selectedDateProvider);
+    final selectedDateNormalized = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
+    final selectedMonthKey = DateTime(selectedDate.year, selectedDate.month);
 
     ref.invalidate(todayExpensesProvider);
+    ref.invalidate(allExpensesProvider);
     ref.invalidate(dateExpensesProvider(savedDate));
     ref.invalidate(monthExpensesProvider(monthKey));
     ref.invalidate(cumulativeBalanceProvider(savedDate));
+
+    if (savedDate != selectedDateNormalized) {
+      ref.invalidate(dateExpensesProvider(selectedDateNormalized));
+      ref.invalidate(cumulativeBalanceProvider(selectedDateNormalized));
+    }
+
+    if (monthKey != selectedMonthKey) {
+      ref.invalidate(monthExpensesProvider(selectedMonthKey));
+    }
+
     ref.invalidate(cashBalanceProvider);
     ref.invalidate(bankBalanceProvider);
 
     if (mounted) {
-      context.pop();
+      context.go('/');
     }
   }
 
@@ -403,68 +438,144 @@ class _ReceiptScannerScreenState extends ConsumerState<ReceiptScannerScreen> {
                   ),
                 ] else ...[
                   Divider(color: colorScheme.outlineVariant),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: OutlinedButton.icon(
-                      onPressed: _addItemDraft,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Thêm sản phẩm'),
+                  InkWell(
+                    onTap: () => setState(
+                      () => _isProductListExpanded = !_isProductListExpanded,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer.withValues(
+                          alpha: 0.3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.primary.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.receipt_long,
+                            color: colorScheme.primary,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _merchantDraft.trim().isEmpty
+                                      ? 'Hóa đơn'
+                                      : _merchantDraft.trim(),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${items.length} sản phẩm',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                currencyFormat.format(itemsSum),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Icon(
+                                _isProductListExpanded
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
+                                color: colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  if (items.isEmpty)
-                    Text(
-                      'Chưa có sản phẩm. Hãy bấm “Thêm sản phẩm” để nhập thủ công.',
-                      style: TextStyle(color: colorScheme.onSurfaceVariant),
-                    )
-                  else
-                    Column(
-                      children: [
-                        for (final item in _itemDrafts)
-                          if (!item.deleted)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _ReceiptItemEditor(
-                                draft: item,
-                                currencyFormat: currencyFormat,
-                                onChanged: () => setState(() {}),
-                                onDelete: () =>
-                                    setState(() => item.deleted = true),
+                  if (_isProductListExpanded) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: _addItemDraft,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Thêm sản phẩm'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (items.isEmpty)
+                      Text(
+                        'Chưa có sản phẩm. Hãy bấm "Thêm sản phẩm" để nhập thủ công.',
+                        style: TextStyle(color: colorScheme.onSurfaceVariant),
+                      )
+                    else
+                      Column(
+                        children: [
+                          for (final item in _itemDrafts)
+                            if (!item.deleted)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _ReceiptItemEditor(
+                                  draft: item,
+                                  currencyFormat: currencyFormat,
+                                  onChanged: () => setState(() {}),
+                                  onDelete: () =>
+                                      setState(() => item.deleted = true),
+                                ),
                               ),
-                            ),
-                        Divider(color: colorScheme.outlineVariant),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Tổng sản phẩm'),
-                          trailing: Text(
-                            currencyFormat.format(itemsSum),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                        if (hasGap)
+                          Divider(color: colorScheme.outlineVariant),
                           ListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: Text(
-                              'Chênh lệch so với tổng cộng',
-                              style: TextStyle(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
+                            title: const Text('Tổng sản phẩm'),
                             trailing: Text(
-                              currencyFormat.format(totalGap),
+                              currencyFormat.format(itemsSum),
                               style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: totalGap.abs() >= 1
-                                    ? colorScheme.tertiary
-                                    : colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                           ),
-                      ],
-                    ),
+                          if (hasGap)
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                'Chênh lệch so với tổng cộng',
+                                style: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              trailing: Text(
+                                currencyFormat.format(totalGap),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: totalGap.abs() >= 1
+                                      ? colorScheme.tertiary
+                                      : colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                  ],
                 ],
               ],
             ),

@@ -19,6 +19,8 @@ class Expense {
 
   @enumerated
   late PaymentMethod paymentMethod;
+
+  String? receiptGroupId;
 }
 
 enum PaymentMethod { cash, bank }

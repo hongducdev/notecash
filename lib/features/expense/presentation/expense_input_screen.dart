@@ -70,10 +70,29 @@ class _ExpenseInputScreenState extends ConsumerState<ExpenseInputScreen> {
     );
     final monthKey = DateTime(savedDate.year, savedDate.month);
 
+    final selectedDate = ref.read(selectedDateProvider);
+    final selectedDateNormalized = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
+    final selectedMonthKey = DateTime(selectedDate.year, selectedDate.month);
+
     ref.invalidate(todayExpensesProvider);
+    ref.invalidate(allExpensesProvider);
     ref.invalidate(dateExpensesProvider(savedDate));
     ref.invalidate(monthExpensesProvider(monthKey));
     ref.invalidate(cumulativeBalanceProvider(savedDate));
+
+    if (savedDate != selectedDateNormalized) {
+      ref.invalidate(dateExpensesProvider(selectedDateNormalized));
+      ref.invalidate(cumulativeBalanceProvider(selectedDateNormalized));
+    }
+
+    if (monthKey != selectedMonthKey) {
+      ref.invalidate(monthExpensesProvider(selectedMonthKey));
+    }
+
     ref.invalidate(cashBalanceProvider);
     ref.invalidate(bankBalanceProvider);
 

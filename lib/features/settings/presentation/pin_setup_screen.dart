@@ -38,9 +38,9 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
       if (pin == firstPin) {
         final securityService = ref.read(securityServiceProvider);
         await securityService.setPin(pin);
-        
+
         final canBiometric = await securityService.canUseBiometric();
-        
+
         if (mounted) {
           if (canBiometric) {
             _showBiometricPrompt(securityService);
@@ -88,9 +88,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
                 context.pop(); // close dialog
                 context.pop(); // close screen
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Đã bật mở khóa sinh trắc học'),
-                  ),
+                  const SnackBar(content: Text('Đã bật mở khóa sinh trắc học')),
                 );
               }
             },
@@ -104,7 +102,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     final defaultPinTheme = PinTheme(
       width: 56,
       height: 56,
@@ -119,12 +117,12 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
         border: Border.all(color: colorScheme.outline, width: 1.5),
       ),
     );
-    
+
     final focusedPinTheme = defaultPinTheme.copyDecorationWith(
       border: Border.all(color: colorScheme.primary, width: 2),
       borderRadius: BorderRadius.circular(12),
     );
-    
+
     final submittedPinTheme = defaultPinTheme.copyWith(
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
@@ -132,7 +130,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
         border: Border.all(color: colorScheme.primary, width: 1.5),
       ),
     );
-    
+
     final errorPinTheme = defaultPinTheme.copyDecorationWith(
       border: Border.all(color: colorScheme.error, width: 2),
     );
@@ -179,7 +177,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                isConfirming 
+                isConfirming
                     ? 'Vui lòng xác nhận mã PIN vừa nhập'
                     : 'Mã PIN này dùng để bảo vệ dữ liệu của bạn',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -204,10 +202,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
               ),
               if (errorMessage.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                Text(
-                  errorMessage,
-                  style: TextStyle(color: colorScheme.error),
-                ),
+                Text(errorMessage, style: TextStyle(color: colorScheme.error)),
               ],
             ],
           ),

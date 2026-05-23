@@ -5,6 +5,8 @@ import 'package:notecash/core/providers.dart';
 import 'package:notecash/features/bills/presentation/widgets/bill_tile.dart';
 import 'package:notecash/features/dashboard/presentation/widgets/dashboard_calendar.dart';
 import 'package:notecash/features/dashboard/presentation/widgets/expense_tile.dart';
+import 'package:notecash/features/dashboard/presentation/widgets/expense_group_tile.dart';
+import 'package:notecash/features/expense/domain/expense.dart';
 import 'package:notecash/shared/widgets/app_logo.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -88,14 +90,26 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                       );
                     }
+
+                    final displayItems = _groupExpenses(expenses);
+
                     return SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
                         if (index < dueBills.length) {
                           return BillTile(bill: dueBills[index]);
                         }
-                        final expense = expenses[index - dueBills.length];
-                        return ExpenseTile(expense: expense);
-                      }, childCount: dueBills.length + expenses.length),
+                        final itemIndex = index - dueBills.length;
+                        final item = displayItems[itemIndex];
+
+                        if (item is _ExpenseGroup) {
+                          return ExpenseGroupTile(
+                            headerExpense: item.header,
+                            childExpenses: item.children,
+                          );
+                        } else {
+                          return ExpenseTile(expense: item as Expense);
+                        }
+                      }, childCount: dueBills.length + displayItems.length),
                     );
                   },
                   loading: () => const SliverToBoxAdapter(
@@ -299,4 +313,45 @@ class DashboardScreen extends ConsumerWidget {
       ],
     );
   }
+
+  List<Object> _groupExpenses(List<Expense> expenses) {
+    final displayItems = <Object>[];
+    final processedIds = <int>{};
+
+    for (final expense in expenses) {
+      if (processedIds.contains(expense.id)) continue;
+
+      final groupId = expense.receiptGroupId;
+      if (groupId != null && groupId.endsWith('_header')) {
+        final baseGroupId = groupId.replaceAll('_header', '');
+        final children = expenses
+            .where((e) => e.receiptGroupId == baseGroupId && e.id != expense.id)
+            .toList();
+
+        if (children.isNotEmpty) {
+          displayItems.add(_ExpenseGroup(header: expense, children: children));
+          processedIds.add(expense.id);
+          for (final child in children) {
+            processedIds.add(child.id);
+          }
+        } else {
+          displayItems.add(expense);
+          processedIds.add(expense.id);
+        }
+      } else if (groupId == null ||
+          !expenses.any((e) => e.receiptGroupId == '${groupId}_header')) {
+        displayItems.add(expense);
+        processedIds.add(expense.id);
+      }
+    }
+
+    return displayItems;
+  }
+}
+
+class _ExpenseGroup {
+  final Expense header;
+  final List<Expense> children;
+
+  _ExpenseGroup({required this.header, required this.children});
 }

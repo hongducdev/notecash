@@ -62,15 +62,45 @@ class ExpenseTile extends ConsumerWidget {
                   await service.deleteExpense(expense.id);
 
                   final selectedDate = ref.read(selectedDateProvider);
-                  final monthKey = DateTime(
+                  final selectedDateNormalized = DateTime(
+                    selectedDate.year,
+                    selectedDate.month,
+                    selectedDate.day,
+                  );
+                  final selectedMonthKey = DateTime(
                     selectedDate.year,
                     selectedDate.month,
                   );
 
+                  final expenseDate = DateTime(
+                    expense.createdAt.year,
+                    expense.createdAt.month,
+                    expense.createdAt.day,
+                  );
+                  final expenseMonthKey = DateTime(
+                    expense.createdAt.year,
+                    expense.createdAt.month,
+                  );
+
                   ref.invalidate(todayExpensesProvider);
-                  ref.invalidate(dateExpensesProvider(selectedDate));
-                  ref.invalidate(monthExpensesProvider(monthKey));
-                  ref.invalidate(cumulativeBalanceProvider(selectedDate));
+                  ref.invalidate(allExpensesProvider);
+                  ref.invalidate(dateExpensesProvider(expenseDate));
+                  ref.invalidate(monthExpensesProvider(expenseMonthKey));
+                  ref.invalidate(cumulativeBalanceProvider(expenseDate));
+
+                  if (expenseDate != selectedDateNormalized) {
+                    ref.invalidate(
+                      dateExpensesProvider(selectedDateNormalized),
+                    );
+                    ref.invalidate(
+                      cumulativeBalanceProvider(selectedDateNormalized),
+                    );
+                  }
+
+                  if (expenseMonthKey != selectedMonthKey) {
+                    ref.invalidate(monthExpensesProvider(selectedMonthKey));
+                  }
+
                   ref.invalidate(cashBalanceProvider);
                   ref.invalidate(bankBalanceProvider);
 
