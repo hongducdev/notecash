@@ -53,46 +53,72 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       const SettingsScreen(),
     ];
 
+    // Map UI navigation index to actual page index
+    int getPageIndex(int navIndex) {
+      if (navIndex < 2) return navIndex;
+      if (navIndex > 2) return navIndex - 1;
+      return _selectedIndex > 2
+          ? _selectedIndex - 1
+          : _selectedIndex; // fallback
+    }
+
+    // Map actual page index to UI navigation index
+    int getNavIndex(int pageIndex) {
+      if (pageIndex < 2) return pageIndex;
+      return pageIndex + 1;
+    }
+
+    final activeNavIndex = getNavIndex(_selectedIndex);
+
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
+        selectedIndex: activeNavIndex,
         onDestinationSelected: (index) {
+          if (index == 2) {
+            context.push(_selectedIndex == 1 ? '/add-bill' : '/add-expense');
+            return;
+          }
           setState(() {
-            _selectedIndex = index;
+            _selectedIndex = getPageIndex(index);
           });
         },
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          const NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: 'Trang chủ',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long),
             label: 'Hóa đơn',
           ),
           NavigationDestination(
+            icon: Icon(
+              _selectedIndex == 1
+                  ? Icons.add_box_outlined
+                  : Icons.add_circle_outline,
+              size: 28,
+            ),
+            selectedIcon: Icon(
+              _selectedIndex == 1 ? Icons.add_box : Icons.add_circle,
+              size: 28,
+            ),
+            label: _selectedIndex == 1 ? 'Thêm HĐ' : 'Thêm GD',
+          ),
+          const NavigationDestination(
             icon: Icon(Icons.chat_outlined),
             selectedIcon: Icon(Icons.chat),
             label: 'Trợ lý',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings),
             label: 'Cài đặt',
           ),
         ],
       ),
-      floatingActionButton: _selectedIndex == 2 || _selectedIndex == 3
-          ? null
-          : FloatingActionButton(
-              onPressed: () => context.push(
-                _selectedIndex == 0 ? '/add-expense' : '/add-bill',
-              ),
-              child: Icon(_selectedIndex == 0 ? Icons.add : Icons.receipt_long),
-            ),
     );
   }
 }
